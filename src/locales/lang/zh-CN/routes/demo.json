@@ -33,7 +33,8 @@
     "loading": "Loading",
     "time": "相对时间",
     "cropperImage": "图片裁剪",
-    "cardList": "卡片列表"
+    "cardList": "卡片列表",
+    "logoWall": "logo墙"
   },
   "editor": {
     "editor": "编辑器",

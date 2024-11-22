@@ -557,6 +557,14 @@ const comp: AppRouteModule = {
         title: t('routes.demo.comp.cardList'),
       },
     },
+    {
+      path: 'logoWall',
+      name: 'LogoWallDemo',
+      component: () => import('@/views/demo/comp/logoWall/index.vue'),
+      meta: {
+        title: t('routes.demo.comp.logoWall'),
+      },
+    },
   ],
 };
 
