@@ -67,11 +67,13 @@
   }
   .logo-wall {
     overflow: hidden;
+    --v-offset: 160px;
+    --curve-height: 480px;
     .content {
       display: flex;
       width: 200%;
-      border-top: 8px solid #949393;
-      border-bottom: 8px solid #949393;
+      //border-top: 8px solid #949393;
+      //border-bottom: 8px solid #949393;
       animation: scroll 15s linear infinite;
       //&:hover {
       //  animation-play-state: paused;
@@ -86,8 +88,32 @@
             border-right: 1px solid #949393;
             border-bottom: 1px solid #949393;
           }
+          &:last-child {
+            :deep(img) {
+              border-bottom: none;
+            }
+          }
         }
       }
+    }
+    &:before,
+    &:after {
+      content: '';
+      display: block;
+      background: #ccc;
+      width: calc(100vw + 2 * var(--v-offset));
+      height: var(--curve-height);
+      position: absolute;
+      border-radius: 50%;
+      left: calc(-1 * var(--v-offset));
+      right: calc(-1 * var(--v-offset));
+      z-index: 1;
+    }
+    &:before {
+      top: calc(-0.6 * var(--curve-height));
+    }
+    &:after {
+      bottom: calc(-0.6 * var(--curve-height));
     }
   }
 </style>
