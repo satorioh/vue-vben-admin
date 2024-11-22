@@ -70,6 +70,8 @@
     .content {
       display: flex;
       width: 200%;
+      border-top: 8px solid #949393;
+      border-bottom: 8px solid #949393;
       animation: scroll 15s linear infinite;
       //&:hover {
       //  animation-play-state: paused;
@@ -80,6 +82,10 @@
         flex-direction: column;
         .row {
           display: flex;
+          :deep(img) {
+            border-right: 1px solid #949393;
+            border-bottom: 1px solid #949393;
+          }
         }
       }
     }
