@@ -13,9 +13,22 @@
           />
         </div>
       </div>
+      <div class="image-wrap">
+        <div class="row" v-for="(row, index) in imageList" :key="'copy-row' + index">
+          <Image
+            v-for="item in row"
+            :key="'copy-image' + item"
+            :src="item"
+            :width="400"
+            :height="300"
+            :preview="false"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
   import { Image } from 'ant-design-vue';
   import logo1 from '@/assets/images/logo/1.jpg';
@@ -44,9 +57,25 @@
 </script>
 
 <style scoped lang="less">
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
   .logo-wall {
+    overflow: hidden;
     .content {
+      display: flex;
+      width: 200%;
+      animation: scroll 15s linear infinite;
+      //&:hover {
+      //  animation-play-state: paused;
+      //}
       .image-wrap {
+        width: 50%;
         display: flex;
         flex-direction: column;
         .row {

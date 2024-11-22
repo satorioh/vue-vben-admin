@@ -19,6 +19,7 @@
     </div>
   </PageWrapper>
 </template>
+
 <script setup lang="ts">
   import { PageWrapper } from '@/components/Page';
   import { Image } from 'ant-design-vue';
