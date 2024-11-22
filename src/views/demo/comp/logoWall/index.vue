@@ -11,8 +11,11 @@
       />
       <div
         ref="domRef"
-        class="wall flex items-center justify-center w-1/2 h-64 mx-auto mt-10 bg-white rounded-md"
-      ></div>
+        class="wall-wrap items-center justify-center w-1/2 h-64 mx-auto mt-10 bg-white rounded-md"
+        :style="{ display: isDomFullscreen ? 'flex' : 'none' }"
+      >
+        <LogoWall />
+      </div>
     </div>
   </PageWrapper>
 </template>
@@ -22,6 +25,7 @@
   import Icon from '@/components/Icon/Icon.vue';
   import { useFullscreen } from '@vueuse/core';
   import previewImage from '@/assets/images/logo_wall_preview.png';
+  import { LogoWall } from '@/components/LogoWall';
   import { ref } from 'vue';
   import type { Nullable } from '@vben/types';
 
@@ -48,9 +52,8 @@
       transform: translate(-50%, -50%);
       cursor: pointer;
     }
-    .wall {
+    .wall-wrap {
       position: absolute;
-      z-index: -1;
     }
   }
 </style>
