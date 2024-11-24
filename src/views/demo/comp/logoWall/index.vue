@@ -9,13 +9,7 @@
         class="play-icon"
         @click="handlePlayClick"
       />
-      <div
-        ref="domRef"
-        class="wall-wrap items-center justify-center w-1/2 h-64 mx-auto mt-10 bg-white rounded-md"
-        :style="{ display: isDomFullscreen ? 'flex' : 'none' }"
-      >
-        <LogoWall />
-      </div>
+      <LogoWall v-show="isDomFullscreen" ref="domRef" />
     </div>
   </PageWrapper>
 </template>
@@ -29,6 +23,8 @@
   import { LogoWall } from '@/components/LogoWall';
   import { ref } from 'vue';
   import type { Nullable } from '@vben/types';
+
+  defineOptions({ name: 'LogoWallDemo' });
 
   const domRef = ref<Nullable<HTMLElement>>(null);
   const { toggle: toggleDom, isFullscreen: isDomFullscreen } = useFullscreen(domRef);
@@ -52,9 +48,6 @@
       left: 50%;
       transform: translate(-50%, -50%);
       cursor: pointer;
-    }
-    .wall-wrap {
-      position: absolute;
     }
   }
 </style>
