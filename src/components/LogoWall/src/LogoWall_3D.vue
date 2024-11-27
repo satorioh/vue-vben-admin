@@ -1,0 +1,141 @@
+<template>
+  <div class="curved-surface-container" ref="container"> </div>
+</template>
+
+<script setup lang="ts">
+  import { ref, onUpdated } from 'vue';
+  import { threeHandlerClass } from './curvedSurfaceThree';
+  import { curvedSurfaceListItemType } from '@/components/LogoWall/src/types';
+
+  defineOptions({ name: 'LogoWall' });
+
+  const imagePool = [
+    { url: 'src/assets/images/logo/1.jpg' },
+    { url: 'src/assets/images/logo/2.jpeg' },
+    { url: 'src/assets/images/logo/3.jpg' },
+    { url: 'src/assets/images/logo/4.png' },
+    { url: 'src/assets/images/logo/5.jpg' },
+    { url: 'src/assets/images/logo/6.png' },
+    { url: 'src/assets/images/logo/7.jpg' },
+    { url: 'src/assets/images/logo/8.png' },
+    { url: 'src/assets/images/logo/9.png' },
+    { url: 'src/assets/images/logo/10.png' },
+    { url: 'src/assets/images/logo/11.png' },
+    { url: 'src/assets/images/logo/12.png' },
+    { url: 'src/assets/images/logo/13.png' },
+    { url: 'src/assets/images/logo/14.png' },
+    { url: 'src/assets/images/logo/15.png' },
+  ];
+
+  const imageList: curvedSurfaceListItemType[][] = [];
+
+  const container = ref<HTMLElement | null>();
+  const autoPlaySpeed = ref<number>(10);
+  const face = 4; // 球体由多少个面组成
+
+  let threeHandler: threeHandlerClass | null = null;
+  // 屏幕信息
+  let containerWidth = 0;
+  let containerHeight = 0;
+
+  // 列表计算信息
+  const colNumList = [8, 12, 16, 20];
+  const colIndex = ref<number>(1);
+  // 列数
+  let colNum = 0;
+  // 行数
+  let rowNum = 0;
+  // 元素宽度
+  let itemWidth = 0;
+  // 一屏元素总数量
+  let allItemNum = 0;
+
+  // 获取屏幕信息信息并计算相关数据
+  const setContainerInfo = async () => {
+    if (!container.value) {
+      return Promise.reject('set container info error !');
+    }
+    const { clientWidth, clientHeight } = container.value;
+    containerWidth = clientWidth;
+    containerHeight = clientHeight;
+    console.log('containerWidth', containerWidth, 'containerHeight', containerHeight);
+    if (clientWidth === 0 || clientHeight === 0) {
+      return Promise.reject('width or height is 0 !');
+    }
+    // 获取列数
+    colNum = colNumList[colIndex.value];
+    console.log('列数', colNum);
+
+    // 计算每个元素的宽度
+    itemWidth = clientWidth / colNum;
+    console.log('每个元素的宽度', itemWidth);
+
+    // 计算行数
+    rowNum = Math.floor(clientHeight / itemWidth);
+    console.log('行数', rowNum);
+
+    // 计算总数
+    allItemNum = colNum * rowNum;
+    console.log('一屏展示的元素总数', allItemNum);
+    console.log('当前球体的面数', face);
+    imageListGenerate();
+  };
+
+  // 随机生成imageList，imageList的每行共allItemNum个元素（随机选取自imagePool），共face行
+  const imageListGenerate = () => {
+    for (let i = 0; i < face; i++) {
+      const list: curvedSurfaceListItemType[] = [];
+      for (let j = 0; j < allItemNum; j++) {
+        const index = Math.floor(Math.random() * imagePool.length);
+        list.push({
+          url: imagePool[index].url,
+          index: index,
+        });
+      }
+      imageList.push(list);
+    }
+    console.log('随机生成imageList 个数', imageList.length * imageList[0].length);
+  };
+
+  const renderWall = async () => {
+    if (!container.value) {
+      return Promise.reject('Cannot get container element !');
+    }
+    threeHandler = new threeHandlerClass();
+    threeHandler.setInfo(
+      container.value,
+      containerWidth,
+      containerHeight,
+      colNum,
+      rowNum,
+      allItemNum,
+      itemWidth,
+      imageList,
+    );
+    threeHandler.init();
+    threeHandler.createListView();
+    threeHandler.execAnimate();
+    threeHandler.mountedEvent();
+    setTimeout(() => {
+      threeHandler && threeHandler.setAutoPlaySpeed(autoPlaySpeed.value);
+    }, 1000);
+  };
+
+  const init = async () => {
+    await setContainerInfo();
+    await renderWall();
+  };
+
+  onUpdated(() => {
+    init();
+  });
+</script>
+
+<style scoped lang="less">
+  .curved-surface-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    flex: 1 1 0 !important;
+  }
+</style>

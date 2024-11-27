@@ -111,7 +111,9 @@
     "vxe-table": "^4.7.40",
     "vxe-table-plugin-export-xlsx": "^4.0.4",
     "xe-utils": "^3.5.28",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "three": "^0.146.0",
+    "three-css3d": "^1.0.3"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
