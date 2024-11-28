@@ -159,5 +159,6 @@
     height: 100%;
     position: relative;
     flex: 1 1 0 !important;
+    background: #6d9ec4;
   }
 </style>
