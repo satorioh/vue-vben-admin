@@ -9,7 +9,7 @@
         class="play-icon"
         @click="handlePlayClick"
       />
-      <LogoWall v-show="isDomFullscreen" ref="domRef" />
+      <LogoWall v-show="isDomFullscreen" ref="domRef" :isShow="isDomFullscreen" />
     </div>
   </PageWrapper>
 </template>

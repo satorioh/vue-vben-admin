@@ -432,10 +432,10 @@ export class threeHandlerClass {
     });
 
     /** 鼠标移动 */
-    this.mouseMoveRemove = createListener({
-      name: 'mousemove',
-      listener: this._handleMouveMove(),
-    });
+    // this.mouseMoveRemove = createListener({
+    //   name: 'mousemove',
+    //   listener: this._handleMouveMove(),
+    // });
   }
 
   /** 删除所有事件监听 */
@@ -443,7 +443,7 @@ export class threeHandlerClass {
     this.mouseDragRemove();
     this.mouseWheelWebkitRemove();
     this.mouseWheelMozRemove();
-    this.mouseMoveRemove();
+    // this.mouseMoveRemove();
   }
 
   /** 鼠标按下事件 */

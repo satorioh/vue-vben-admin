@@ -3,11 +3,17 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onUpdated } from 'vue';
+  import { onUpdated, ref } from 'vue';
   import { threeHandlerClass } from './curvedSurfaceThree';
   import { curvedSurfaceListItemType } from '@/components/LogoWall/src/types';
 
-  defineOptions({ name: 'LogoWall' });
+  defineOptions({ name: 'LogoWall3D' });
+  const props = defineProps({
+    isShow: {
+      type: Boolean,
+      default: false,
+    },
+  });
 
   const imagePool = [
     { url: 'src/assets/images/logo/1.jpg' },
@@ -27,7 +33,7 @@
     { url: 'src/assets/images/logo/15.png' },
   ];
 
-  const imageList: curvedSurfaceListItemType[][] = [];
+  let imageList: curvedSurfaceListItemType[][] = [];
 
   const container = ref<HTMLElement | null>();
   const autoPlaySpeed = ref<number>(10);
@@ -101,6 +107,7 @@
     if (!container.value) {
       return Promise.reject('Cannot get container element !');
     }
+    console.log('开始渲染……');
     threeHandler = new threeHandlerClass();
     threeHandler.setInfo(
       container.value,
@@ -121,9 +128,24 @@
     }, 1000);
   };
 
+  const reset = () => {
+    console.log('reset');
+    threeHandler && threeHandler.cancelEvent();
+    container.value && (container.value.innerHTML = '');
+    imageList = [];
+  };
+
   const init = async () => {
-    await setContainerInfo();
-    await renderWall();
+    try {
+      if (!props.isShow) {
+        reset();
+      } else {
+        await setContainerInfo();
+        await renderWall();
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   onUpdated(() => {
