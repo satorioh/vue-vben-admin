@@ -188,6 +188,36 @@ export class threeHandlerClass {
     }
   }
 
+  /** 清理内存 */
+  dispose(): void {
+    console.log('dispose start...');
+    if (this.scene) {
+      this.scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          if (obj.geometry) {
+            obj.geometry.dispose();
+          }
+          if (obj.material) {
+            if (Array.isArray(obj.material)) {
+              obj.material.forEach((material) => material.dispose());
+            } else {
+              obj.material.dispose();
+            }
+          }
+        }
+      });
+    }
+
+    if (this.renderer) {
+      // this.renderer.dispose();
+    }
+
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    console.log('dispose finish');
+  }
+
   /**
    * 获取大图坐标(随机)
    * @param { Array<curvedSurfaceCoordinateType> } coordinates 做坐标集

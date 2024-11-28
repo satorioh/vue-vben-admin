@@ -130,8 +130,13 @@
 
   const reset = () => {
     console.log('reset');
-    threeHandler && threeHandler.cancelEvent();
-    container.value && (container.value.innerHTML = '');
+    if (threeHandler) {
+      threeHandler.cancelEvent();
+      threeHandler.dispose();
+    }
+    if (container.value) {
+      container.value.innerHTML = '';
+    }
     imageList = [];
   };
 
