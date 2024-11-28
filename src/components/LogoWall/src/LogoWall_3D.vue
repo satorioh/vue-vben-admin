@@ -36,7 +36,7 @@
   let imageList: curvedSurfaceListItemType[][] = [];
 
   const container = ref<HTMLElement | null>();
-  const autoPlaySpeed = ref<number>(10);
+  const autoPlaySpeed = ref<number>(7);
   const face = 4; // 球体由多少个面组成
 
   let threeHandler: threeHandlerClass | null = null;
