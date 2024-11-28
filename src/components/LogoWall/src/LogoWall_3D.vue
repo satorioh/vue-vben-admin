@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onUpdated, ref } from 'vue';
+  import { ref, watch, onMounted, nextTick } from 'vue';
   import { threeHandlerClass } from './curvedSurfaceThree';
   import { curvedSurfaceListItemType } from '@/components/LogoWall/src/types';
 
@@ -140,17 +140,26 @@
       if (!props.isShow) {
         reset();
       } else {
-        await setContainerInfo();
-        await renderWall();
+        await nextTick(async () => {
+          await setContainerInfo();
+          await renderWall();
+        });
       }
     } catch (error) {
       console.error(error);
     }
   };
 
-  onUpdated(() => {
+  onMounted(() => {
     init();
   });
+
+  watch(
+    () => props.isShow,
+    () => {
+      init();
+    },
+  );
 </script>
 
 <style scoped lang="less">
