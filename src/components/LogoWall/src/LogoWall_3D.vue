@@ -9,6 +9,7 @@
     curvedSurfaceListItemType,
     mountedEventOptionType,
   } from '@/components/LogoWall/src/types';
+  import { cloneDeep } from 'lodash-es';
 
   defineOptions({ name: 'LogoWall3D' });
   const props = defineProps({
@@ -35,6 +36,11 @@
     autoPlaySpeed: {
       type: Number,
       default: 7,
+    },
+    /** imageList生成模式：随机random、顺序order */
+    imageListGenerateMode: {
+      type: String,
+      default: 'order',
     },
     /** 是否启用鼠标事件 */
     enableMouseEvent: {
@@ -100,23 +106,47 @@
 
     // 计算总数
     allItemNum = colNum * rowNum;
-    console.log('一屏展示的元素总数', allItemNum, '当前球体的面数', props.face);
+    console.log(
+      `一屏展示的元素总数:${allItemNum}, 当前球体的面数${props.face}, 总计所需元素数量${allItemNum * props.face}`,
+    );
   };
 
-  // 随机生成imageList，imageList的每行共allItemNum个元素（随机选取自imagePool），共face行
+  // 随机生成imageList，生成规则如下：
+  // 如果imagePool的数量大于等于 allItemNum x face 个元素，则直接取前 allItemNum x face 个元素，并切割成face个数组
+  // 如果imagePool的数量小于 allItemNum x face 个元素，则按不同模式取imagePool的元素，直到取满 allItemNum x face 个元素，并切割成face个数组
   const imageListGenerate = async () => {
-    for (let i = 0; i < props.face; i++) {
-      const list: curvedSurfaceListItemType[] = [];
-      for (let j = 0; j < allItemNum; j++) {
-        const index = Math.floor(Math.random() * props.imagePool.length);
-        list.push({
-          url: props.imagePool[index].url,
-          index: index,
-        });
+    let tempList: curvedSurfaceListItemType[] = [];
+    const totalNum = allItemNum * props.face;
+    if (props.imagePool.length >= totalNum) {
+      console.log('imagePool数量大于等于所需数量，截取中……');
+      tempList = props.imagePool.slice(0, totalNum);
+    } else {
+      console.log('imagePool数量小于所需数量');
+      if (props.imageListGenerateMode === 'order') {
+        // 循环顺序取imagePool的元素，直到取满 allItemNum x face 个元素
+        console.log('顺序取值中……');
+        const loopNum = Math.ceil(totalNum / props.imagePool.length);
+        for (let i = 0; i < loopNum; i++) {
+          tempList = tempList.concat(props.imagePool);
+        }
+      } else if (props.imageListGenerateMode === 'random') {
+        // 先取imagePool中所有元素，剩下不足的个数，则随机取imagePool的元素，直到取满 allItemNum x face 个元素
+        console.log('随机取值中……');
+        tempList = cloneDeep(props.imagePool);
+        const randomNum = totalNum - tempList.length;
+        for (let i = 0; i < randomNum; i++) {
+          const randomIndex = Math.floor(Math.random() * props.imagePool.length);
+          tempList.push(props.imagePool[randomIndex]);
+        }
       }
-      imageList.push(list);
+      tempList = tempList.slice(0, totalNum);
     }
-    console.log('随机生成imageList 个数', imageList.length * imageList[0].length);
+    console.log('一维图片数量', tempList.length);
+    // 切分成二维数组
+    for (let i = 0; i < props.face; i++) {
+      imageList.push(tempList.slice(i * allItemNum, (i + 1) * allItemNum));
+    }
+    console.log(`二维图片：面数${imageList.length}，每个面的元素数${imageList[0].length}`);
   };
 
   const renderWall = async () => {
