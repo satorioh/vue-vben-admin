@@ -32,15 +32,13 @@
     { url: 'src/assets/images/logo/14.png' },
     { url: 'src/assets/images/logo/15.png' },
   ];
-
   let imageList: curvedSurfaceListItemType[][] = [];
 
-  const container = ref<HTMLElement | null>();
   const autoPlaySpeed = ref<number>(7);
   const face = 4; // 球体由多少个面组成
 
-  let threeHandler: threeHandlerClass | null = null;
   // 屏幕信息
+  const container = ref<HTMLElement | null>();
   let containerWidth = 0;
   let containerHeight = 0;
 
@@ -55,6 +53,8 @@
   let itemWidth = 0;
   // 一屏元素总数量
   let allItemNum = 0;
+
+  let threeHandler: threeHandlerClass | null = null;
 
   // 获取屏幕信息信息并计算相关数据
   const setContainerInfo = async () => {
@@ -82,13 +82,11 @@
 
     // 计算总数
     allItemNum = colNum * rowNum;
-    console.log('一屏展示的元素总数', allItemNum);
-    console.log('当前球体的面数', face);
-    imageListGenerate();
+    console.log('一屏展示的元素总数', allItemNum, '当前球体的面数', face);
   };
 
   // 随机生成imageList，imageList的每行共allItemNum个元素（随机选取自imagePool），共face行
-  const imageListGenerate = () => {
+  const imageListGenerate = async () => {
     for (let i = 0; i < face; i++) {
       const list: curvedSurfaceListItemType[] = [];
       for (let j = 0; j < allItemNum; j++) {
@@ -126,6 +124,7 @@
     setTimeout(() => {
       threeHandler && threeHandler.setAutoPlaySpeed(autoPlaySpeed.value);
     }, 1000);
+    console.log('渲染完成');
   };
 
   const reset = () => {
@@ -133,6 +132,7 @@
     if (threeHandler) {
       threeHandler.cancelEvent();
       threeHandler.dispose();
+      threeHandler = null;
     }
     if (container.value) {
       container.value.innerHTML = '';
@@ -147,6 +147,7 @@
       } else {
         await nextTick(async () => {
           await setContainerInfo();
+          await imageListGenerate();
           await renderWall();
         });
       }
