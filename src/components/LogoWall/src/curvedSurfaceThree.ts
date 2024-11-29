@@ -1,4 +1,8 @@
-import type { curvedSurfaceListItemType, curvedSurfaceCoordinateType } from './types';
+import {
+  curvedSurfaceListItemType,
+  curvedSurfaceCoordinateType,
+  mountedEventOptionType,
+} from './types';
 import type { Scene, PerspectiveCamera } from 'three';
 import type { CSS3DRenderer as CSS3DRendererType } from 'three-css3d';
 
@@ -435,7 +439,7 @@ export class threeHandlerClass {
   }
 
   /** 开始事件监功能：鼠标拖动, 鼠标滚轮 */
-  mountedEvent(): void {
+  mountedEvent(options: mountedEventOptionType): void {
     // 创建并添加拖动遮罩元素
     if (!this.maskElement) {
       this.maskElement = document.createElement('div');
@@ -443,29 +447,35 @@ export class threeHandlerClass {
     }
 
     /** 鼠标拖动处理: 分为按下，移动，抬起，按下事件 */
-    this.mouseDragRemove = createListener({
-      el: this.container,
-      name: 'mousedown',
-      listener: this._handleMouseDown(),
-    });
+    if (options.enableMouseDrag !== false) {
+      this.mouseDragRemove = createListener({
+        el: this.container,
+        name: 'mousedown',
+        listener: this._handleMouseDown(),
+      });
+    }
 
     /** 鼠标滚轮 */
-    this.mouseWheelWebkitRemove = createListener({
-      el: this.container,
-      name: 'mousewheel',
-      listener: this._handleMouseWheelWebkit(),
-    });
-    this.mouseWheelMozRemove = createListener({
-      el: this.container,
-      name: 'DOMMouseScroll',
-      listener: this._handleMouseWheelMoz(),
-    });
+    if (options.enableMouseWheel !== false) {
+      this.mouseWheelWebkitRemove = createListener({
+        el: this.container,
+        name: 'mousewheel',
+        listener: this._handleMouseWheelWebkit(),
+      });
+      this.mouseWheelMozRemove = createListener({
+        el: this.container,
+        name: 'DOMMouseScroll',
+        listener: this._handleMouseWheelMoz(),
+      });
+    }
 
     /** 鼠标移动 */
-    this.mouseMoveRemove = createListener({
-      name: 'mousemove',
-      listener: this._handleMouseMove(),
-    });
+    if (options.enableMouseMove !== false) {
+      this.mouseMoveRemove = createListener({
+        name: 'mousemove',
+        listener: this._handleMouseMove(),
+      });
+    }
   }
 
   /** 删除所有事件监听 */

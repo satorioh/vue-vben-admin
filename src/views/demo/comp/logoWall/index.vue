@@ -14,7 +14,7 @@
         ref="domRef"
         :isShow="isDomFullscreen"
         :image-pool="imagePool"
-        :enable-mouse-event="false"
+        :mounted-event-option="mountedEventOption"
       />
     </div>
   </PageWrapper>
@@ -52,6 +52,12 @@
     { url: 'src/assets/images/logo/14.png' },
     { url: 'src/assets/images/logo/15.png' },
   ];
+
+  const mountedEventOption = {
+    enableMouseMove: false,
+    // enableMouseDrag: true,
+    // enableMouseWheel: false,
+  };
 
   const handlePlayClick = () => {
     toggleDom();

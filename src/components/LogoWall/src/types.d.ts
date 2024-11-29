@@ -11,3 +11,13 @@ export interface curvedSurfaceCoordinateType {
   lookAt: { x: number; y: number; z: number };
   deg: number;
 }
+
+// 鼠标事件类型
+export interface mountedEventOptionType {
+  /** 鼠标悬浮暂停 */
+  enableMouseMove?: boolean;
+  /** 鼠标拖拽移动 */
+  enableMouseDrag?: boolean;
+  /** 鼠标滚轮移动 */
+  enableMouseWheel?: boolean;
+}

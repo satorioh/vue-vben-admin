@@ -5,7 +5,10 @@
 <script setup lang="ts">
   import { ref, watch, onMounted, nextTick } from 'vue';
   import { threeHandlerClass } from './curvedSurfaceThree';
-  import { curvedSurfaceListItemType } from '@/components/LogoWall/src/types';
+  import {
+    curvedSurfaceListItemType,
+    mountedEventOptionType,
+  } from '@/components/LogoWall/src/types';
 
   defineOptions({ name: 'LogoWall3D' });
   const props = defineProps({
@@ -37,6 +40,16 @@
     enableMouseEvent: {
       type: Boolean,
       default: true,
+    },
+    mountedEventOption: {
+      type: Object as () => mountedEventOptionType,
+      default: () => {
+        return {
+          enableMouseMove: true,
+          enableMouseDrag: true,
+          enableMouseWheel: true,
+        };
+      },
     },
   });
 
@@ -125,7 +138,7 @@
     threeHandler.init();
     threeHandler.createListView();
     threeHandler.execAnimate();
-    if (props.enableMouseEvent) threeHandler.mountedEvent();
+    if (props.enableMouseEvent) threeHandler.mountedEvent(props.mountedEventOption);
     setTimeout(() => {
       threeHandler && threeHandler.setAutoPlaySpeed(props.autoPlaySpeed);
     }, 1000);
