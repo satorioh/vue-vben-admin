@@ -33,6 +33,11 @@
       type: Number,
       default: 7,
     },
+    /** 是否启用鼠标事件 */
+    enableMouseEvent: {
+      type: Boolean,
+      default: true,
+    },
   });
 
   let imageList: curvedSurfaceListItemType[][] = [];
@@ -120,7 +125,7 @@
     threeHandler.init();
     threeHandler.createListView();
     threeHandler.execAnimate();
-    threeHandler.mountedEvent();
+    if (props.enableMouseEvent) threeHandler.mountedEvent();
     setTimeout(() => {
       threeHandler && threeHandler.setAutoPlaySpeed(props.autoPlaySpeed);
     }, 1000);
@@ -130,7 +135,7 @@
   const reset = () => {
     console.log('reset');
     if (threeHandler) {
-      threeHandler.cancelEvent();
+      if (props.enableMouseEvent) threeHandler.cancelEvent();
       threeHandler.dispose();
       threeHandler = null;
     }

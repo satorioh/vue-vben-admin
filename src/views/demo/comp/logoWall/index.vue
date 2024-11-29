@@ -14,6 +14,7 @@
         ref="domRef"
         :isShow="isDomFullscreen"
         :image-pool="imagePool"
+        :enable-mouse-event="false"
       />
     </div>
   </PageWrapper>
