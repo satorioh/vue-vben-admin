@@ -19,15 +19,19 @@
       type: Array<curvedSurfaceListItemType>,
       default: () => [],
     },
-    /** 自动播放速度：使用正负数控制方向，0为停止 */
-    autoPlaySpeed: {
-      type: Number,
-      default: 7,
-    },
     /** 球体由多少个面组成：可以控制曲面的弧度 */
     face: {
       type: Number,
       default: 4,
+    },
+    /** 列数：建议通过列数来控制行数（规律为列数减少，行数也会减少） */
+    col: {
+      type: Number,
+    },
+    /** 自动播放速度：使用正负数控制方向，0为停止 */
+    autoPlaySpeed: {
+      type: Number,
+      default: 7,
     },
   });
 
@@ -65,7 +69,7 @@
       return Promise.reject('width or height is 0 !');
     }
     // 获取列数
-    colNum = colNumList[colIndex.value];
+    colNum = props.col || colNumList[colIndex.value];
     console.log('列数', colNum);
 
     // 计算每个元素的宽度
