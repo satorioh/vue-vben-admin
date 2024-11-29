@@ -9,33 +9,29 @@
 
   defineOptions({ name: 'LogoWall3D' });
   const props = defineProps({
+    /** 当前是否显示 */
     isShow: {
       type: Boolean,
       default: false,
     },
+    /** 候选图片池，imageList会根据图片池生成 */
+    imagePool: {
+      type: Array<curvedSurfaceListItemType>,
+      default: () => [],
+    },
+    /** 自动播放速度：使用正负数控制方向，0为停止 */
+    autoPlaySpeed: {
+      type: Number,
+      default: 7,
+    },
+    /** 球体由多少个面组成：可以控制曲面的弧度 */
+    face: {
+      type: Number,
+      default: 4,
+    },
   });
 
-  const imagePool = [
-    { url: 'src/assets/images/logo/1.jpg' },
-    { url: 'src/assets/images/logo/2.jpeg' },
-    { url: 'src/assets/images/logo/3.jpg' },
-    { url: 'src/assets/images/logo/4.png' },
-    { url: 'src/assets/images/logo/5.jpg' },
-    { url: 'src/assets/images/logo/6.png' },
-    { url: 'src/assets/images/logo/7.jpg' },
-    { url: 'src/assets/images/logo/8.png' },
-    { url: 'src/assets/images/logo/9.png' },
-    { url: 'src/assets/images/logo/10.png' },
-    { url: 'src/assets/images/logo/11.png' },
-    { url: 'src/assets/images/logo/12.png' },
-    { url: 'src/assets/images/logo/13.png' },
-    { url: 'src/assets/images/logo/14.png' },
-    { url: 'src/assets/images/logo/15.png' },
-  ];
   let imageList: curvedSurfaceListItemType[][] = [];
-
-  const autoPlaySpeed = ref<number>(7);
-  const face = 4; // 球体由多少个面组成
 
   // 屏幕信息
   const container = ref<HTMLElement | null>();
@@ -82,17 +78,17 @@
 
     // 计算总数
     allItemNum = colNum * rowNum;
-    console.log('一屏展示的元素总数', allItemNum, '当前球体的面数', face);
+    console.log('一屏展示的元素总数', allItemNum, '当前球体的面数', props.face);
   };
 
   // 随机生成imageList，imageList的每行共allItemNum个元素（随机选取自imagePool），共face行
   const imageListGenerate = async () => {
-    for (let i = 0; i < face; i++) {
+    for (let i = 0; i < props.face; i++) {
       const list: curvedSurfaceListItemType[] = [];
       for (let j = 0; j < allItemNum; j++) {
-        const index = Math.floor(Math.random() * imagePool.length);
+        const index = Math.floor(Math.random() * props.imagePool.length);
         list.push({
-          url: imagePool[index].url,
+          url: props.imagePool[index].url,
           index: index,
         });
       }
@@ -122,7 +118,7 @@
     threeHandler.execAnimate();
     threeHandler.mountedEvent();
     setTimeout(() => {
-      threeHandler && threeHandler.setAutoPlaySpeed(autoPlaySpeed.value);
+      threeHandler && threeHandler.setAutoPlaySpeed(props.autoPlaySpeed);
     }, 1000);
     console.log('渲染完成');
   };

@@ -1,4 +1,4 @@
-import { withInstall } from '@/utils';
 import logoWall from './src/LogoWall_3D.vue';
 
-export const LogoWall = withInstall(logoWall);
+export const LogoWall = logoWall;
+export type { curvedSurfaceListItemType } from './src/types';

@@ -9,7 +9,12 @@
         class="play-icon"
         @click="handlePlayClick"
       />
-      <LogoWall v-show="isDomFullscreen" ref="domRef" :isShow="isDomFullscreen" />
+      <LogoWall
+        v-show="isDomFullscreen"
+        ref="domRef"
+        :isShow="isDomFullscreen"
+        :image-pool="imagePool"
+      />
     </div>
   </PageWrapper>
 </template>
@@ -28,6 +33,24 @@
 
   const domRef = ref<Nullable<HTMLElement>>(null);
   const { toggle: toggleDom, isFullscreen: isDomFullscreen } = useFullscreen(domRef);
+
+  const imagePool = [
+    { url: 'src/assets/images/logo/1.jpg' },
+    { url: 'src/assets/images/logo/2.jpeg' },
+    { url: 'src/assets/images/logo/3.jpg' },
+    { url: 'src/assets/images/logo/4.png' },
+    { url: 'src/assets/images/logo/5.jpg' },
+    { url: 'src/assets/images/logo/6.png' },
+    { url: 'src/assets/images/logo/7.jpg' },
+    { url: 'src/assets/images/logo/8.png' },
+    { url: 'src/assets/images/logo/9.png' },
+    { url: 'src/assets/images/logo/10.png' },
+    { url: 'src/assets/images/logo/11.png' },
+    { url: 'src/assets/images/logo/12.png' },
+    { url: 'src/assets/images/logo/13.png' },
+    { url: 'src/assets/images/logo/14.png' },
+    { url: 'src/assets/images/logo/15.png' },
+  ];
 
   const handlePlayClick = () => {
     toggleDom();
