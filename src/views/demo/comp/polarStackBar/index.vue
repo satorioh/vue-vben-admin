@@ -79,7 +79,7 @@
             focus: 'self',
             itemStyle: {
               shadowBlur: 10,
-              shadowColor: 'rgba(0, 0, 0, 0.5)',
+              shadowColor: 'red',
             },
           },
         },
@@ -100,7 +100,7 @@
             focus: 'self',
             itemStyle: {
               shadowBlur: 10,
-              shadowColor: 'rgba(0, 0, 0, 0.5)',
+              shadowColor: 'red',
             },
           },
         },
@@ -137,10 +137,18 @@
     myChart.setOption({ legend });
   };
 
+  const changeEmphasisShadowColor = (curYear: number) => {
+    myChart = getInstance();
+    const series = myChart.getOption().series;
+    series.forEach((item: any, index: number) => {
+      item.emphasis.itemStyle.shadowColor = colorList[curYear][index];
+    });
+    myChart.setOption({ series });
+  };
+
   const highLightCircle = (curYear: number) => {
     myChart = getInstance();
     for (let i of years.keys()) {
-      console.log(i, curYear);
       myChart.dispatchAction({
         type: i !== curYear ? 'downplay' : 'highlight',
         seriesIndex: [0, 1],
@@ -164,6 +172,7 @@
     () => curIndex.value,
     (newVal) => {
       changeLegendColor(newVal);
+      changeEmphasisShadowColor(newVal);
       highLightCircle(newVal);
     },
   );
