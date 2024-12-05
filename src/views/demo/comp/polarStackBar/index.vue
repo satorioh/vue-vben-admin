@@ -107,6 +107,8 @@
       ],
       legend: {
         show: true,
+        left: 'center',
+        top: 'bottom',
         // 根据colorList动态显示不同的颜色
         data: [
           {
@@ -114,11 +116,17 @@
             itemStyle: {
               color: colorList[0][0],
             },
+            textStyle: {
+              color: 'white',
+            },
           },
           {
             name: '责任准备',
             itemStyle: {
               color: colorList[0][1],
+            },
+            textStyle: {
+              color: 'white',
             },
           },
         ],
@@ -186,6 +194,7 @@
     width: 100%;
     height: 100%;
     position: relative;
+    background: black;
 
     .chart {
       width: 50%;
