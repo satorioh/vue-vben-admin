@@ -565,6 +565,14 @@ const comp: AppRouteModule = {
         title: t('routes.demo.comp.logoWall'),
       },
     },
+    {
+      path: 'polarStackBar',
+      name: 'PolarStackBarDemo',
+      component: () => import('@/views/demo/comp/polarStackBar/index.vue'),
+      meta: {
+        title: 'PolarStackBar',
+      },
+    },
   ],
 };
 
