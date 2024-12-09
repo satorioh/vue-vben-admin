@@ -33,11 +33,11 @@
 
   const initChart = () => {
     setOptions({
-      backgroundColor: '#0e202d',
-
+      // backgroundColor: '#0e202d',
+      //
       grid: {
-        top: 200,
-        bottom: 150,
+        top: 24,
+        bottom: 44,
       },
       xAxis: {
         data: [],
@@ -180,7 +180,6 @@
         // 外-渐变色
         {
           type: 'bar',
-          silent: true,
           barWidth: 140,
           barGap: '-120%',
           data: [
