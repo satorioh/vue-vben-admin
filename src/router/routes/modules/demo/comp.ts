@@ -573,6 +573,14 @@ const comp: AppRouteModule = {
         title: 'PolarStackBar',
       },
     },
+    {
+      path: 'pictorialBar',
+      name: 'PictorialBarDemo',
+      component: () => import('@/views/demo/comp/pictorialBar/index.vue'),
+      meta: {
+        title: 'PictorialBar',
+      },
+    },
   ],
 };
 
