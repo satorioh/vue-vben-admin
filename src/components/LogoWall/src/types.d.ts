@@ -20,4 +20,6 @@ export interface mountedEventOptionType {
   enableMouseDrag?: boolean;
   /** 鼠标滚轮移动 */
   enableMouseWheel?: boolean;
+  /** 鼠标点击 */
+  enableMouseClick?: boolean;
 }

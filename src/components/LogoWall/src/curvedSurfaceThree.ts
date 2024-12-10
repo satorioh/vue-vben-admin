@@ -59,6 +59,7 @@ export class threeHandlerClass {
   mouseWheelWebkitRemove = (): void => {};
   mouseWheelMozRemove = (): void => {};
   mouseMoveRemove = (): void => {};
+  mouseClickRemove = (): void => {};
 
   /**
    * 设置数据信息
@@ -476,6 +477,15 @@ export class threeHandlerClass {
         listener: this._handleMouseMove(),
       });
     }
+
+    /** 鼠标点击 */
+    if (options.enableMouseClick !== false) {
+      this.mouseClickRemove = createListener({
+        el: this.container,
+        name: 'click',
+        listener: this._handleMouseClick(),
+      });
+    }
   }
 
   /** 删除所有事件监听 */
@@ -484,6 +494,7 @@ export class threeHandlerClass {
     this.mouseWheelWebkitRemove();
     this.mouseWheelMozRemove();
     this.mouseMoveRemove();
+    this.mouseClickRemove();
   }
 
   /** 鼠标按下事件 */
@@ -550,6 +561,16 @@ export class threeHandlerClass {
       } else {
         _this.setAutoPlaySpeed(_this.autoPlaySpeed);
       }
+    };
+  }
+
+  /** 鼠标点击事件 */
+  _handleMouseClick(): Function {
+    const _this = this;
+    return (event: MouseEvent) => {
+      // 停止冒泡
+      event.stopPropagation();
+      console.log('_handleMouseClick');
     };
   }
 }

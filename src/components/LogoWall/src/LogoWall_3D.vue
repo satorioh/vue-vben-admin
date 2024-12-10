@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted, nextTick } from 'vue';
+  import { ref, watch, onMounted, nextTick, onUnmounted } from 'vue';
   import { threeHandlerClass } from './curvedSurfaceThree';
   import {
     curvedSurfaceListItemType,
@@ -54,6 +54,7 @@
           enableMouseMove: true,
           enableMouseDrag: true,
           enableMouseWheel: true,
+          enableMouseClick: true,
         };
       },
     },
@@ -206,6 +207,10 @@
 
   onMounted(() => {
     init();
+  });
+
+  onUnmounted(() => {
+    reset();
   });
 
   watch(
