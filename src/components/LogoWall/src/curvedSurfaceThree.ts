@@ -42,7 +42,7 @@ export class threeHandlerClass {
   elementClass = 'box-border p-1';
   // 图片元素class
   imgClass =
-    'rounded-md w-full h-full object-contain select-none relative cursor-pointer border-2 border-transparent';
+    'rounded-md w-full h-full object-contain select-none relative border-2 border-transparent';
   // 遮罩元素class
   maskClass = 'absolute z-10 top-0 bottom-0 left-0 right-0 cursor-grabbing';
   // 遮罩元素
