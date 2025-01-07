@@ -581,6 +581,14 @@ const comp: AppRouteModule = {
         title: 'PictorialBar',
       },
     },
+    {
+      path: 'wordCloud',
+      name: 'WordCloudDemo',
+      component: () => import('@/views/demo/comp/wordCloud/index.vue'),
+      meta: {
+        title: '词云',
+      },
+    },
   ],
 };
 
