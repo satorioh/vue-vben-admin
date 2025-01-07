@@ -8,13 +8,13 @@
       :title="item"
       @mouseenter="stop(index)"
       @mouseleave="start"
-      >{{ item.length > 8 ? item.slice(0, 8) + '...' : item }}</span
+      >{{ format(item) }}</span
     >
   </div>
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted, ref } from 'vue';
+  import { onUnmounted, ref, watch } from 'vue';
   import { DirectionEnum } from './wordCloudEnum';
   import type { contentEleItemFE } from './wordCloud';
 
@@ -43,6 +43,10 @@
   });
   const contentEle = ref<contentEleItemFE[]>([]);
   let animateID = 0;
+
+  const format = (item: string) => {
+    return item.length > 8 ? item.slice(0, 8) + '...' : item;
+  };
 
   const rotateX = () => {
     const angleX = [DirectionEnum.XForward, DirectionEnum.XBackward].includes(props.direction)
@@ -115,6 +119,7 @@
 
   const changeStyle = (index: number) => {
     const ele = contentEle.value[index];
+    if (!ele) return;
     const { transform } = ele.style;
     if (transform) {
       const transformValue = transform.split(' scale')[0];
@@ -129,6 +134,7 @@
 
   const cancelAnimation = () => {
     window.cancelAnimationFrame(animateID);
+    animateID = 0;
   };
 
   // 鼠标移入暂停
@@ -143,6 +149,7 @@
   };
 
   const init = () => {
+    console.log('init');
     const RADIUSX = (props.width - 50) / 2;
     const RADIUSY = (props.height - 50) / 2;
     contentEle.value = [];
@@ -164,9 +171,18 @@
     animate();
   };
 
-  onMounted(() => {
-    init();
-  });
+  watch(
+    () => props.data,
+    (newVal) => {
+      if (newVal) {
+        if (animateID) {
+          cancelAnimation();
+        }
+        init();
+      }
+    },
+    { deep: true, immediate: true },
+  );
 
   onUnmounted(() => {
     cancelAnimation();
