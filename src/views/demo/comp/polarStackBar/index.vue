@@ -76,7 +76,7 @@
             borderRadius: 10,
           },
           emphasis: {
-            focus: 'self',
+            focus: 'none',
             itemStyle: {
               shadowBlur: 10,
               shadowColor: 'red',
@@ -97,7 +97,7 @@
             borderRadius: 10,
           },
           emphasis: {
-            focus: 'self',
+            focus: 'none',
             itemStyle: {
               shadowBlur: 10,
               shadowColor: 'red',
@@ -164,6 +164,19 @@
       });
     }
   };
+
+  // 等效代码
+  // const highLightCircle = (curYear: number) => {
+  //   myChart = getInstance();
+  //   // 重置所有高亮状态
+  //   myChart.dispatchAction({ type: 'downplay' });
+  //   // 高亮当前年份的两个系列
+  //   myChart.dispatchAction({
+  //     type: 'highlight',
+  //     seriesIndex: [0, 1],
+  //     dataIndex: curYear,
+  //   });
+  // };
 
   const loopCurIndex = () => {
     timer = setInterval(() => {
