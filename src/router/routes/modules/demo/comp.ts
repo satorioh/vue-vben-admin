@@ -589,6 +589,14 @@ const comp: AppRouteModule = {
         title: '词云',
       },
     },
+    {
+      path: 'customCursor',
+      name: 'CustomCursorDemo',
+      component: () => import('@/views/demo/comp/customCursor/index.vue'),
+      meta: {
+        title: '自定义鼠标',
+      },
+    },
   ],
 };
 
