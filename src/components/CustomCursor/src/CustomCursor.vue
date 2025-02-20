@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted } from 'vue';
+  import { ref, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue';
   import { useEventListener } from '@/hooks/event/useEventListener';
 
   defineOptions({ name: 'CustomCursor' });
@@ -20,8 +20,7 @@
   const maxScale = 3;
 
   const showCursor = (bool: boolean = true) => {
-    if (!cursorRef.value) return;
-    cursorRef.value.style.display = bool ? 'block' : 'none';
+    if (cursorRef.value) cursorRef.value.style.display = bool ? 'block' : 'none';
     if (bool) {
       document.body.classList.add('hide-cursor');
     } else {
@@ -30,18 +29,9 @@
   };
 
   const updateCursor = () => {
-    if (!cursorRef.value) return;
-    cursorRef.value.style.transform = `translate(${lastX}px, ${lastY}px) scale(${currentScale})`;
-  };
-
-  const onMouseEnter = () => {
-    useEventListener({
-      el: document,
-      name: 'mouseenter',
-      listener: () => {
-        showCursor();
-      },
-    });
+    if (cursorRef.value) {
+      cursorRef.value.style.transform = `translate(${lastX}px, ${lastY}px) scale(${currentScale})`;
+    }
   };
 
   const onMouseMove = () => {
@@ -50,6 +40,7 @@
       name: 'mousemove',
       isDebounce: false,
       listener: (e) => {
+        console.log('mousemove', e.clientX, e.clientY);
         lastX = e.clientX;
         lastY = e.clientY;
         cancelAnimationFrame(animationId);
@@ -61,12 +52,12 @@
   };
 
   const bindEvents = () => {
-    onMouseEnter();
     onMouseMove();
   };
 
   const init = () => {
     bindEvents();
+    showCursor();
   };
 
   const reset = () => {
