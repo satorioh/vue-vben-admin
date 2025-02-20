@@ -3,13 +3,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue';
+  import { ref, onMounted, onUnmounted } from 'vue';
   import { useEventListener } from '@/hooks/event/useEventListener';
+  import { throttle } from 'lodash-es';
 
   defineOptions({ name: 'CustomCursor' });
 
   const cursorRef = ref<HTMLDivElement | null>(null);
-  let animationId: number = 0;
+  let isAnimating = false;
 
   // 初始化参数
   let currentScale = 1;
@@ -28,11 +29,13 @@
     }
   };
 
-  const updateCursor = () => {
+  const throttledUpdateCursor = throttle(() => {
+    console.log('throttledUpdateCursor');
     if (cursorRef.value) {
       cursorRef.value.style.transform = `translate(${lastX}px, ${lastY}px) scale(${currentScale})`;
     }
-  };
+    isAnimating = false;
+  }, 16); // 16ms 大约是 60fps
 
   const onMouseMove = () => {
     useEventListener({
@@ -40,13 +43,13 @@
       name: 'mousemove',
       isDebounce: false,
       listener: (e) => {
-        console.log('mousemove', e.clientX, e.clientY);
         lastX = e.clientX;
         lastY = e.clientY;
-        cancelAnimationFrame(animationId);
-        animationId = requestAnimationFrame(() => {
-          updateCursor();
-        });
+
+        if (!isAnimating) {
+          isAnimating = true;
+          requestAnimationFrame(throttledUpdateCursor);
+        }
       },
     });
   };
