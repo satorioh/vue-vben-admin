@@ -221,6 +221,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'ocr',
+      name: 'OcrDemo',
+      component: () => import('@/views/demo/feat/ocr/index.vue'),
+      meta: {
+        title: 'OCR文本提取',
+      },
+    },
+    {
       path: '/error-log',
       name: 'ErrorLog',
       component: () => import('@/views/sys/error-log/index.vue'),
