@@ -15,6 +15,7 @@
     >
       {{ uploading ? 'Uploading' : 'Start Upload' }}
     </Button>
+    <Tinymce v-model="ocrResult" width="100%" class="mt-4" />
   </PageWrapper>
 </template>
 
@@ -25,12 +26,14 @@
   import { message, Upload, Button } from 'ant-design-vue';
   import type { UploadProps } from 'ant-design-vue';
   import { orcUpload } from '@/api/sys/upload';
+  import { Tinymce } from '/@/components/Tinymce/index';
 
   defineOptions({
     name: 'OcrDemo',
   });
 
   const fileList = ref([]);
+  const ocrResult = ref<string>('');
   const uploading = ref<boolean>(false);
 
   const handleRemove: UploadProps['onRemove'] = (file) => {
@@ -50,9 +53,11 @@
 
     // You can use any AJAX library you like
     orcUpload({ file: fileList.value[0] })
-      .then(() => {
-        fileList.value = [];
+      .then((res) => {
         uploading.value = false;
+        const result = res.data.data.result;
+        console.log(result);
+        ocrResult.value = result.join('<br/>');
         message.success('upload successfully.');
       })
       .catch(() => {
