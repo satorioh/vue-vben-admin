@@ -18,7 +18,13 @@
       <transition name="sidebar-fade">
         <div v-if="objectFileUrl" class="ocr-sidebar">
           <h3>AI识图</h3>
-          <div class="btn-group"> </div>
+          <div class="btn-group">
+            <Button type="primary" @click="initScreenShot" class="mr-4">截图识别</Button>
+            <Button type="primary">全部识别</Button>
+          </div>
+          <div class="ocr-result-list">
+            <OcrResultItem v-for="(item, index) in ocrResult" :key="index" :text="item" />
+          </div>
         </div>
       </transition>
     </div>
@@ -28,10 +34,10 @@
 <script setup lang="ts">
   import { ref, onUnmounted } from 'vue';
   import { UploadOutlined } from '@ant-design/icons-vue';
-  import { message, Upload } from 'ant-design-vue';
+  import { message, Upload, Button } from 'ant-design-vue';
   import type { UploadProps } from 'ant-design-vue';
-  import { orcUpload } from '@/api/sys/upload';
   import ScreenShot from 'js-web-screen-shot';
+  import OcrResultItem from './OcrResultItem.vue';
 
   defineOptions({
     name: 'OcrDemo',
@@ -39,7 +45,7 @@
 
   const fileList = ref<File[]>([]);
   const objectFileUrl = ref<string>('');
-  const ocrResult = ref<string>('');
+  const ocrResult = ref<string[]>([]);
   const uploading = ref<boolean>(false);
   const screenShotHandler = ref<ScreenShot | null>(null);
 
@@ -49,26 +55,53 @@
     return false;
   };
 
-  const handleUpload = () => {
+  const handleUpload = async (file) => {
     uploading.value = true;
 
     // You can use any AJAX library you like
-    orcUpload({ file: fileList.value[0] })
-      .then((res) => {
-        uploading.value = false;
-        const result = res.data.data.result;
-        console.log(result);
-        ocrResult.value = result.join('<br/>');
-        message.success('upload successfully.');
-      })
-      .catch(() => {
-        uploading.value = false;
-        message.error('upload failed.');
+    let formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      let res = await fetch('http://127.0.0.1:8000/py-api/ocr/recognize', {
+        method: 'POST',
+        body: formData,
       });
+      let data = await res.json();
+      console.log('上传成功：', data);
+      const resultText = data.data.result.join('');
+      ocrResult.value.push(resultText);
+    } catch (err) {
+      console.error('上传失败：', err);
+    }
+  };
+
+  const initScreenShot = () => {
+    screenShotHandler.value = new ScreenShot({
+      enableWebRtc: false,
+      completeCallback: completeScreenShotCallback,
+    });
+  };
+
+  const base64ToFile = (base64, filename) => {
+    let arr = base64.split(',');
+    let mime = arr[0].match(/:(.*?);/)[1];
+    let bstr = atob(arr[1]);
+    let n = bstr.length;
+    let u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new File([u8arr], filename, { type: mime });
   };
 
   const completeScreenShotCallback = (data: any) => {
     console.log('Screenshot complete:', data);
+    const fileName = `screenshot-${Date.now()}.png`;
+    const file = base64ToFile(data.base64, fileName);
+    handleUpload(file);
   };
 
   const destroyScreenShot = () => {
@@ -90,6 +123,7 @@
     flex: 1;
     padding: 20px;
     background-color: #fff;
+    overflow: hidden;
 
     .ocr-content-wrapper {
       display: flex;
@@ -97,15 +131,18 @@
       flex: 1;
       width: 100%;
       margin-top: 20px;
+      overflow: hidden;
     }
 
     .ocr-image-area {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       background: #fff;
       min-height: 300px;
+      overflow: hidden;
+      overflow-y: auto;
 
       img {
         max-width: 100%;
