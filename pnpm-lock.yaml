@@ -59,6 +59,9 @@ importers:
       html2canvas:
         specifier: ^1.4.1
         version: 1.4.1
+      js-web-screen-shot:
+        specifier: 1.9.9-rc.27
+        version: 1.9.9-rc.27
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -4564,6 +4567,9 @@ packages:
 
   js-tokens@8.0.3:
     resolution: {integrity: sha512-UfJMcSJc+SEXEl9lH/VLHSZbThQyLpw1vLO1Lb+j4RWDvG3N2f7yj3PVQA3cmkTBNldJ9eFnM+xEXxHIXrYiJw==}
+
+  js-web-screen-shot@1.9.9-rc.27:
+    resolution: {integrity: sha512-8eP0m28bSDE4EL5j4MglD1Kd8h+VCj7Kr3ApQS2xK22BFJo8qfG4bi0Tuh7t/oQIKNPROwOLSbzwiGhOR3dmIg==}
 
   js-yaml@3.14.1:
     resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
@@ -12222,6 +12228,10 @@ snapshots:
   js-tokens@4.0.0: {}
 
   js-tokens@8.0.3: {}
+
+  js-web-screen-shot@1.9.9-rc.27:
+    dependencies:
+      html2canvas: 1.4.1
 
   js-yaml@3.14.1:
     dependencies:

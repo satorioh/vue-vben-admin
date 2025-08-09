@@ -1,50 +1,51 @@
 <template>
-  <PageWrapper title="OCR示例">
-    <Upload :file-list="fileList" :before-upload="beforeUpload" @remove="handleRemove">
+  <div class="ocr-demo-page">
+    <Upload
+      :file-list="fileList"
+      :showUploadList="false"
+      :maxCount="1"
+      :before-upload="beforeUpload"
+    >
       <a-button>
         <upload-outlined />
-        Select File
+        选择图片
       </a-button>
     </Upload>
-    <Button
-      type="primary"
-      :disabled="fileList.length === 0"
-      :loading="uploading"
-      style="margin-top: 16px"
-      @click="handleUpload"
-    >
-      {{ uploading ? 'Uploading' : 'Start Upload' }}
-    </Button>
-    <Tinymce v-model="ocrResult" width="100%" class="mt-4" />
-  </PageWrapper>
+    <div v-if="objectFileUrl" class="ocr-content-wrapper">
+      <div class="ocr-image-area">
+        <img :src="objectFileUrl" alt="OCR图片" />
+      </div>
+      <transition name="sidebar-fade">
+        <div v-if="objectFileUrl" class="ocr-sidebar">
+          <h3>AI识图</h3>
+          <div class="btn-group"> </div>
+        </div>
+      </transition>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
-  import { PageWrapper } from '@/components/Page';
+  import { ref, onUnmounted } from 'vue';
   import { UploadOutlined } from '@ant-design/icons-vue';
-  import { message, Upload, Button } from 'ant-design-vue';
+  import { message, Upload } from 'ant-design-vue';
   import type { UploadProps } from 'ant-design-vue';
   import { orcUpload } from '@/api/sys/upload';
-  import { Tinymce } from '/@/components/Tinymce/index';
+  import ScreenShot from 'js-web-screen-shot';
 
   defineOptions({
     name: 'OcrDemo',
   });
 
-  const fileList = ref([]);
+  const fileList = ref<File[]>([]);
+  const objectFileUrl = ref<string>('');
   const ocrResult = ref<string>('');
   const uploading = ref<boolean>(false);
-
-  const handleRemove: UploadProps['onRemove'] = (file) => {
-    const index = fileList.value.indexOf(file);
-    const newFileList = fileList.value.slice();
-    newFileList.splice(index, 1);
-    fileList.value = newFileList;
-  };
+  const screenShotHandler = ref<ScreenShot | null>(null);
 
   const beforeUpload: UploadProps['beforeUpload'] = (file) => {
-    fileList.value = [...(fileList.value || []), file];
+    fileList.value = [file];
+    objectFileUrl.value = URL.createObjectURL(file);
     return false;
   };
 
@@ -65,6 +66,84 @@
         message.error('upload failed.');
       });
   };
+
+  const completeScreenShotCallback = (data: any) => {
+    console.log('Screenshot complete:', data);
+  };
+
+  const destroyScreenShot = () => {
+    if (screenShotHandler.value) {
+      screenShotHandler.value.destroyComponents();
+      screenShotHandler.value = null;
+    }
+  };
+
+  onUnmounted(() => {
+    destroyScreenShot();
+  });
 </script>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+  .ocr-demo-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 20px;
+    background-color: #fff;
+
+    .ocr-content-wrapper {
+      display: flex;
+      flex-direction: row;
+      flex: 1;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .ocr-image-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      min-height: 300px;
+
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+    }
+
+    .ocr-sidebar {
+      width: 300px;
+      background: #fafafa;
+      border-left: 1px solid #eee;
+      border-radius: 12px 0 0 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      padding: 24px 16px;
+      box-sizing: border-box;
+      transition: box-shadow 0.3s;
+
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
+
+  .sidebar-fade-enter-active,
+  .sidebar-fade-leave-active {
+    transition:
+      opacity 0.3s,
+      transform 0.3s;
+  }
+  .sidebar-fade-enter-from,
+  .sidebar-fade-leave-to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  .sidebar-fade-enter-to,
+  .sidebar-fade-leave-from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+</style>
