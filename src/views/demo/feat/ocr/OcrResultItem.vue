@@ -2,17 +2,11 @@
   <div class="ocr-result-item">
     <a-textarea class="text-content" v-model:value="textValue" autoSize :bordered="false" />
     <div class="copy-btn" @click="copyText" :title="'复制'">
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-        <path d="m5 15-4-4h3l4 4" />
-        <path d="M5 15H1a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"
+        />
       </svg>
     </div>
   </div>

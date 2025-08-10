@@ -30,13 +30,16 @@
             <a-button type="primary" danger class="w-60px" @click="emptyScreenShot">清空</a-button>
           </div>
           <div class="ocr-result-list">
-            <OcrResultItem
-              v-for="(item, index) in ocrResult"
-              :key="index"
-              class="ocr-result-item"
-              :model-value="item"
-              @update:model-value="updateOcrResult(index, $event)"
-            />
+            <div v-if="loading" class="ocr-loading-mask"> AI识别中... </div>
+            <template v-else>
+              <OcrResultItem
+                v-for="(item, index) in ocrResult"
+                :key="index"
+                class="ocr-result-item"
+                :model-value="item"
+                @update:model-value="updateOcrResult(index, $event)"
+              />
+            </template>
           </div>
         </div>
       </transition>
@@ -63,7 +66,7 @@
     type: '',
   });
   const ocrResult = ref<string[]>([]);
-  const uploading = ref<boolean>(false);
+  const loading = ref<boolean>(false);
   const screenShotHandler = ref<ScreenShot | null>(null);
   const apiUrl = 'http://127.0.0.1:8000/py-api/ocr/recognize';
   const PDF_TYPE = 'application/pdf';
@@ -86,8 +89,12 @@
     return false;
   };
 
+  const showLoading = (bool: boolean) => {
+    loading.value = bool;
+  };
+
   const handleUpload = async (file) => {
-    uploading.value = true;
+    showLoading(true);
 
     // You can use any AJAX library you like
     let formData = new FormData();
@@ -104,6 +111,8 @@
       ocrResult.value.push(resultText);
     } catch (err) {
       console.error('上传失败：', err);
+    } finally {
+      showLoading(false);
     }
   };
 
@@ -196,6 +205,8 @@
     }
 
     .ocr-sidebar {
+      display: flex;
+      flex-direction: column;
       width: 300px;
       background: #fafafa;
       border-left: 1px solid #eee;
@@ -204,6 +215,7 @@
       padding: 24px 16px;
       box-sizing: border-box;
       transition: box-shadow 0.3s;
+      overflow: hidden;
 
       &:hover {
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -239,6 +251,24 @@
     transform: translateX(0);
   }
   .ocr-result-list {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    overflow-y: auto;
+    .ocr-loading-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      font-size: 14px;
+      color: #333;
+    }
     .ocr-result-item {
       margin-bottom: 12px;
     }
