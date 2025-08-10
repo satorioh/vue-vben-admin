@@ -4,26 +4,39 @@
       :file-list="fileList"
       :showUploadList="false"
       :maxCount="1"
+      accept="image/*,.pdf"
       :before-upload="beforeUpload"
     >
       <a-button>
         <upload-outlined />
-        选择图片
+        选择文件
       </a-button>
     </Upload>
-    <div v-if="objectFileUrl" class="ocr-content-wrapper">
+    <div v-if="objectFile.url" class="ocr-content-wrapper">
       <div class="ocr-image-area">
-        <img :src="objectFileUrl" alt="OCR图片" />
+        <PdfViewer
+          v-if="objectFile.type === PDF_TYPE"
+          :source="objectFile.url"
+          class="pdf-viewer"
+        />
+        <img v-else :src="objectFile.url" alt="OCR图片" />
       </div>
       <transition name="sidebar-fade">
-        <div v-if="objectFileUrl" class="ocr-sidebar">
+        <div v-if="objectFile.url" class="ocr-sidebar">
           <h3>AI识图</h3>
           <div class="btn-group">
-            <Button type="primary" @click="initScreenShot" class="mr-4">截图识别</Button>
-            <Button type="primary">全部识别</Button>
+            <a-button type="primary" @click="initScreenShot" class="mr-4 w-60px">截图</a-button>
+            <!--            <Button type="primary">全部识别</Button>-->
+            <a-button type="primary" danger class="w-60px" @click="emptyScreenShot">清空</a-button>
           </div>
           <div class="ocr-result-list">
-            <OcrResultItem v-for="(item, index) in ocrResult" :key="index" :text="item" />
+            <OcrResultItem
+              v-for="(item, index) in ocrResult"
+              :key="index"
+              class="ocr-result-item"
+              :model-value="item"
+              @update:model-value="updateOcrResult(index, $event)"
+            />
           </div>
         </div>
       </transition>
@@ -34,24 +47,42 @@
 <script setup lang="ts">
   import { ref, onUnmounted } from 'vue';
   import { UploadOutlined } from '@ant-design/icons-vue';
-  import { message, Upload, Button } from 'ant-design-vue';
+  import { Upload } from 'ant-design-vue';
   import type { UploadProps } from 'ant-design-vue';
   import ScreenShot from 'js-web-screen-shot';
   import OcrResultItem from './OcrResultItem.vue';
+  import PdfViewer from '@/components/PdfViewer/index.vue';
 
   defineOptions({
     name: 'OcrDemo',
   });
 
   const fileList = ref<File[]>([]);
-  const objectFileUrl = ref<string>('');
+  const objectFile = ref({
+    url: '',
+    type: '',
+  });
   const ocrResult = ref<string[]>([]);
   const uploading = ref<boolean>(false);
   const screenShotHandler = ref<ScreenShot | null>(null);
+  const apiUrl = 'http://127.0.0.1:8000/py-api/ocr/recognize';
+  const PDF_TYPE = 'application/pdf';
 
   const beforeUpload: UploadProps['beforeUpload'] = (file) => {
     fileList.value = [file];
-    objectFileUrl.value = URL.createObjectURL(file);
+    console.log('选择的文件类型：', file.type);
+    const url = URL.createObjectURL(file);
+    if (file.type === PDF_TYPE) {
+      objectFile.value = {
+        url: url,
+        type: PDF_TYPE,
+      };
+    } else {
+      objectFile.value = {
+        url: url,
+        type: 'image',
+      };
+    }
     return false;
   };
 
@@ -63,7 +94,7 @@
     formData.append('file', file);
 
     try {
-      let res = await fetch('http://127.0.0.1:8000/py-api/ocr/recognize', {
+      let res = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       });
@@ -83,6 +114,10 @@
     });
   };
 
+  const emptyScreenShot = () => {
+    ocrResult.value = [];
+  };
+
   const base64ToFile = (base64, filename) => {
     let arr = base64.split(',');
     let mime = arr[0].match(/:(.*?);/)[1];
@@ -95,6 +130,10 @@
     }
 
     return new File([u8arr], filename, { type: mime });
+  };
+
+  const updateOcrResult = (index, value) => {
+    ocrResult.value[index] = value;
   };
 
   const completeScreenShotCallback = (data: any) => {
@@ -149,6 +188,11 @@
         height: auto;
         display: block;
       }
+
+      .pdf-viewer {
+        width: 100%;
+        height: 100%;
+      }
     }
 
     .ocr-sidebar {
@@ -163,6 +207,17 @@
 
       &:hover {
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 0;
+      }
+
+      .btn-group {
+        display: flex !important;
+        margin: 10px 0;
       }
     }
   }
@@ -182,5 +237,10 @@
   .sidebar-fade-leave-from {
     opacity: 1;
     transform: translateX(0);
+  }
+  .ocr-result-list {
+    .ocr-result-item {
+      margin-bottom: 12px;
+    }
   }
 </style>

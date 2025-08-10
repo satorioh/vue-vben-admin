@@ -1,6 +1,6 @@
 <template>
   <div class="ocr-result-item">
-    <div class="text-content">{{ text }}</div>
+    <a-textarea class="text-content" v-model:value="textValue" autoSize :bordered="false" />
     <div class="copy-btn" @click="copyText" :title="'复制'">
       <svg
         width="16"
@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue';
   import { message } from 'ant-design-vue';
 
   defineOptions({
@@ -26,20 +27,27 @@
   });
 
   const props = defineProps({
-    text: {
+    modelValue: {
       type: String,
       default: '',
     },
   });
 
+  const emit = defineEmits(['update:modelValue']);
+
+  const textValue = computed({
+    get: () => props.modelValue,
+    set: (val) => emit('update:modelValue', val),
+  });
+
   const copyText = async () => {
     try {
-      await navigator.clipboard.writeText(props.text);
+      await navigator.clipboard.writeText(textValue.value);
       message.success('复制成功');
     } catch (err) {
       // 降级处理：使用传统方式复制
       const textArea = document.createElement('textarea');
-      textArea.value = props.text;
+      textArea.value = textValue.value;
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
@@ -62,7 +70,7 @@
     padding: 8px 12px;
     border: 1px solid #d9d9d9;
     border-radius: 6px;
-    background-color: #fafafa;
+    background-color: #fff;
 
     .text-content {
       flex: 1;
