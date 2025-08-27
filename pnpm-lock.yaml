@@ -29,6 +29,9 @@ importers:
       '@vueuse/core':
         specifier: ^10.9.0
         version: 10.9.0(vue@3.4.25(typescript@5.4.5))
+      '@zumer/snapdom':
+        specifier: ^1.9.9
+        version: 1.9.9
       '@zxcvbn-ts/core':
         specifier: ^3.0.4
         version: 3.0.4
@@ -2107,6 +2110,9 @@ packages:
 
   '@vxe-ui/core@1.0.12':
     resolution: {integrity: sha512-s79mQw6uYSbTVGBWbxrisHwJV1b770vZMT9XpY3khcFQhXNo25+PS3FLrNCSsBBJR0ZkBLOXDER/ft9DIqgFTw==}
+
+  '@zumer/snapdom@1.9.9':
+    resolution: {integrity: sha512-tBqAdoq1lTJp5cozENtW9H5ZxEpJfagka99dOd7O5j+VbTDWANvPiJsgPLlJMFXUUfyxeL17JFYB2RzM2XxqPg==}
 
   '@zxcvbn-ts/core@3.0.4':
     resolution: {integrity: sha512-aQeiT0F09FuJaAqNrxynlAwZ2mW/1MdXakKWNmGM1Qp/VaY6CnB/GfnMS2T8gB2231Esp1/maCWd8vTG4OuShw==}
@@ -9406,6 +9412,8 @@ snapshots:
     dependencies:
       dom-zindex: 1.0.4
       xe-utils: 3.5.28
+
+  '@zumer/snapdom@1.9.9': {}
 
   '@zxcvbn-ts/core@3.0.4':
     dependencies:

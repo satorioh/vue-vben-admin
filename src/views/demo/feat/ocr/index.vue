@@ -25,9 +25,9 @@
         <div v-if="objectFile.url" class="ocr-sidebar">
           <h3>AI识图</h3>
           <div class="btn-group">
-            <a-button type="primary" @click="initScreenShot" class="mr-4 w-60px">截图</a-button>
+            <a-button type="primary" @click="initScreenShot" class="mr-4">截图</a-button>
             <!--            <Button type="primary">全部识别</Button>-->
-            <a-button type="primary" danger class="w-60px" @click="emptyScreenShot">清空</a-button>
+            <a-button type="primary" danger @click="emptyScreenShot">清空</a-button>
           </div>
           <div class="ocr-result-list">
             <div v-if="loading" class="ocr-loading-mask"> AI识别中... </div>
@@ -48,11 +48,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onUnmounted } from 'vue';
+  import { onUnmounted, ref } from 'vue';
   import { UploadOutlined } from '@ant-design/icons-vue';
-  import { Upload } from 'ant-design-vue';
   import type { UploadProps } from 'ant-design-vue';
+  import { Upload } from 'ant-design-vue';
   import ScreenShot from 'js-web-screen-shot';
+  import { snapdom } from '@zumer/snapdom';
   import OcrResultItem from './OcrResultItem.vue';
   import PdfViewer from '@/components/PdfViewer/index.vue';
 
@@ -68,8 +69,8 @@
   const ocrResult = ref<string[]>([]);
   const loading = ref<boolean>(false);
   const screenShotHandler = ref<ScreenShot | null>(null);
-  const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize';
-  // const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize';
+  // const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize';
+  const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize';
   // const apiUrl = 'http://124.221.18.11:17654/py-api/ocr/recognize';
   const PDF_TYPE = 'application/pdf';
 
@@ -118,13 +119,6 @@
     }
   };
 
-  const initScreenShot = () => {
-    screenShotHandler.value = new ScreenShot({
-      enableWebRtc: false,
-      completeCallback: completeScreenShotCallback,
-    });
-  };
-
   const emptyScreenShot = () => {
     ocrResult.value = [];
   };
@@ -152,6 +146,32 @@
     const fileName = `screenshot-${Date.now()}.png`;
     const file = base64ToFile(data.base64, fileName);
     handleUpload(file);
+  };
+
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result); // 结果是 base64 字符串（带 data:... 前缀）
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob); // 转 base64
+    });
+  };
+
+  const getBodySnapshot = async () => {
+    const blob = await snapdom.toBlob(document.body);
+    // return URL.createObjectURL(blob);
+    return (await blobToBase64(blob)) as string;
+  };
+
+  const initScreenShot = async () => {
+    const url = await getBodySnapshot();
+    screenShotHandler.value = new ScreenShot({
+      imgSrc: url,
+      enableWebRtc: false,
+      completeCallback: completeScreenShotCallback,
+    });
   };
 
   const destroyScreenShot = () => {
@@ -230,7 +250,6 @@
       }
 
       .btn-group {
-        display: flex !important;
         margin: 10px 0;
       }
     }

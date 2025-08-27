@@ -76,6 +76,7 @@
     "@vben/hooks": "workspace:*",
     "@vue/shared": "^3.4.25",
     "@vueuse/core": "^10.9.0",
+    "@zumer/snapdom": "^1.9.9",
     "@zxcvbn-ts/core": "^3.0.4",
     "ant-design-vue": "^4.2.1",
     "axios": "^1.6.8",
