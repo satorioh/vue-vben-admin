@@ -68,7 +68,9 @@
   const ocrResult = ref<string[]>([]);
   const loading = ref<boolean>(false);
   const screenShotHandler = ref<ScreenShot | null>(null);
-  const apiUrl = 'http://127.0.0.1:8000/py-api/ocr/recognize';
+  const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize';
+  // const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize';
+  // const apiUrl = 'http://124.221.18.11:17654/py-api/ocr/recognize';
   const PDF_TYPE = 'application/pdf';
 
   const beforeUpload: UploadProps['beforeUpload'] = (file) => {
