@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onUnmounted, ref } from 'vue';
+  import { onMounted, onUnmounted, ref } from 'vue';
   import { UploadOutlined } from '@ant-design/icons-vue';
   import type { UploadProps } from 'ant-design-vue';
   import { Upload } from 'ant-design-vue';
@@ -181,7 +181,46 @@
     }
   };
 
+  // -----------------------
+  // 全局快捷键（双键方案）
+  // 备用示例: Ctrl+` 也可触发（可删除）
+  // -----------------------
+  const isEditableTarget = (el: EventTarget | null) => {
+    if (!(el instanceof HTMLElement)) return false;
+    if (el.isContentEditable) return true;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  };
+
+  // 定义可用的双键组合（按需增删）
+  const HOTKEYS: Array<(e: KeyboardEvent) => boolean> = [
+    // 备用：Ctrl + `
+    (e) =>
+      !e.repeat &&
+      (e.key === '`' || e.code === 'Backquote') &&
+      e.ctrlKey &&
+      !e.altKey &&
+      !e.metaKey &&
+      !e.shiftKey,
+  ];
+
+  const isScreenShotHotkey = (e: KeyboardEvent) => HOTKEYS.some((fn) => fn(e));
+
+  const handleGlobalHotkey = (e: KeyboardEvent) => {
+    if (isEditableTarget(e.target)) return; // 输入区域不触发
+    if (isScreenShotHotkey(e)) {
+      e.preventDefault();
+      initScreenShot();
+    }
+  };
+
+  // 在 onMounted 中添加（如果还未添加）
+  onMounted(() => {
+    window.addEventListener('keydown', handleGlobalHotkey, { passive: false });
+  });
+
   onUnmounted(() => {
+    window.removeEventListener('keydown', handleGlobalHotkey);
     destroyScreenShot();
   });
 </script>
