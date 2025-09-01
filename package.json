@@ -85,6 +85,7 @@
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.10",
     "echarts": "^5.5.0",
+    "element-plus": "^2.11.1",
     "exceljs": "^4.4.0",
     "html2canvas": "^1.4.1",
     "js-web-screen-shot": "1.9.9-rc.27",

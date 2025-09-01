@@ -4,6 +4,7 @@ import '@/components/VxeTable/src/css/index.scss';
 import 'ant-design-vue/dist/reset.css';
 // Register icon sprite
 import 'virtual:svg-icons-register';
+import 'element-plus/dist/index.css';
 
 import { createApp } from 'vue';
 
