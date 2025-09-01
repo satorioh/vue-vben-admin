@@ -229,6 +229,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'wxocr',
+      name: 'WeiXinOcrDemo',
+      component: () => import('@/views/demo/feat/weixin-ocr/index.vue'),
+      meta: {
+        title: '仿微信文字提取',
+      },
+    },
+    {
       path: '/error-log',
       name: 'ErrorLog',
       component: () => import('@/views/sys/error-log/index.vue'),
