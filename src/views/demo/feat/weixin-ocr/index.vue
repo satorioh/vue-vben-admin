@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount } from 'vue';
+  import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
   import { useResizeObserver } from '@vueuse/core';
   import { debounce } from 'lodash-es';
   import { UploadOutlined } from '@ant-design/icons-vue';
@@ -50,7 +50,6 @@
     width: number;
     height: number;
     text: string;
-    confidence: number;
   }
 
   interface OcrData {
@@ -247,20 +246,106 @@
       const widthRatio = imageWidth.value / ocrData.value.originWidth;
       const heightRatio = imageHeight.value / ocrData.value.originHeight;
       div.style.top = heightRatio * ocr.y + 'px';
-      div.style.left = widthRatio * ocr.x + 'px';
-      div.style.fontSize =
-        calculateFontSize(ocr.text, ocr.width * widthRatio, ocr.height * heightRatio) + 'px';
-      div.textContent = ocr.text;
+      div.style.left = widthRatio * ocr.x - 4 + 'px';
+      div.style.width = (widthRatio * ocr.width >= 14 ? widthRatio * ocr.width : 14) + 'px';
+      div.style.height = heightRatio * ocr.height + 'px';
+      // div.style.fontSize =
+      //   calculateFontSize(ocr.text, ocr.width * widthRatio, ocr.height * heightRatio) + 'px';
+      // div.textContent = ocr.text;
 
       document.getElementsByClassName('ocr-image')[0].appendChild(div);
     });
   };
 
-  onMounted(async () => {});
+  // 选中与框选逻辑新增
+  const SELECTED_CLASS = 'selected';
+
+  const getOcrContainer = (): HTMLElement | null => {
+    return document.getElementsByClassName('ocr-image')[0] as HTMLElement | null;
+  };
+
+  const clearAllSelections = () => {
+    document.querySelectorAll('.ocr-text.' + SELECTED_CLASS).forEach((el) => {
+      el.classList.remove(SELECTED_CLASS);
+    });
+  };
+
+  // 鼠标拖拽选取逻辑
+  let isSelecting = false;
+
+  const handleContainerMouseDown = (e: MouseEvent) => {
+    console.log('handleContainerMouseDown');
+    if (e.button !== 0) return;
+    const container = getOcrContainer();
+    if (!container) return;
+    // 若已有选中，则清空后重新开始新的选取
+    if (container.querySelector('.ocr-text.' + SELECTED_CLASS)) {
+      clearAllSelections();
+    }
+    isSelecting = true;
+    e.preventDefault();
+  };
+
+  const handleContainerMouseUp = (e: MouseEvent) => {
+    console.log('handleContainerMouseUp');
+    if (e.button !== 0) return;
+    isSelecting = false;
+  };
+
+  const handleContainerMouseLeave = () => {
+    console.log('handleContainerMouseLeave');
+    isSelecting = false;
+  };
+
+  const handleContainerMouseOver = (e: MouseEvent) => {
+    console.log('handleContainerMouseOver');
+    if (!isSelecting) return;
+    const target = e.target as HTMLElement;
+    if (target && target.classList.contains('ocr-text')) {
+      target.classList.add(SELECTED_CLASS);
+    }
+  };
+
+  const bindContainerEvents = () => {
+    const c = getOcrContainer();
+    if (!c) return;
+    console.log('绑定 OCR 容器事件');
+    c.addEventListener('mousedown', handleContainerMouseDown);
+    c.addEventListener('mouseup', handleContainerMouseUp);
+    c.addEventListener('mouseleave', handleContainerMouseLeave);
+    c.addEventListener('mouseover', handleContainerMouseOver);
+  };
+
+  const unbindContainerEvents = () => {
+    const c = getOcrContainer();
+    if (!c) return;
+    console.log('解绑 OCR 容器事件');
+    c.removeEventListener('mousedown', handleContainerMouseDown);
+    c.removeEventListener('mouseup', handleContainerMouseUp);
+    c.removeEventListener('mouseleave', handleContainerMouseLeave);
+    c.removeEventListener('mouseover', handleContainerMouseOver);
+  };
+
+  onMounted(() => {});
 
   onBeforeUnmount(() => {
     relayoutOnResize.cancel();
+    unbindContainerEvents();
   });
+
+  watch(
+    () => ocrData.value,
+    (newVal) => {
+      if (newVal.locations.length > 0) {
+        nextTick(() => {
+          bindContainerEvents();
+        });
+      } else {
+        unbindContainerEvents();
+      }
+    },
+    { deep: true },
+  );
 </script>
 
 <style scoped lang="scss">
@@ -283,9 +368,20 @@
 <style>
   .ocr-text {
     position: absolute;
-    user-select: text;
+    user-select: none;
+    cursor: text;
+    transition: background-color 0.12s;
     //color: transparent;
     color: red;
-    border: 1px solid green;
+    border: 1px solid blue;
+  }
+  .ocr-text.selected {
+    /* 使用系统色 + 回退 */
+    background: Highlight;
+    color: HighlightText;
+    /* 回退颜色 */
+    background-color: rgba(64, 158, 255, 0.35);
+    color: #000;
+    outline: 1px solid #409eff;
   }
 </style>
