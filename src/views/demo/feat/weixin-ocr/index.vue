@@ -1,9 +1,29 @@
 <template>
   <div class="wx-ocr-demo-page">
+    <div class="flex mb-4">
+      <el-upload
+        :file-list="fileList"
+        :showUploadList="false"
+        :maxCount="1"
+        accept="image/*,.pdf"
+        :before-upload="beforeUpload"
+        :show-file-list="false"
+      >
+        <el-button>
+          <upload-outlined />
+          选择文件
+        </el-button>
+      </el-upload>
+      <el-button class="ml-4" :disabled="fileList.length === 0" @click="recognizeImage"
+        >识别</el-button
+      >
+    </div>
     <div class="preview-container" v-loading="loading">
+      <PdfViewer v-if="objectFile.type === PDF_TYPE" :source="objectFile.url" class="pdf-viewer" />
       <el-image
+        v-else
         style="width: 100%; height: auto"
-        :src="blobUrl"
+        :src="objectFile.url"
         preview-teleported
         fit="contain"
         class="ocr-image"
@@ -14,10 +34,11 @@
 </template>
 
 <script setup lang="ts">
-  import InvoiceImage from '@/assets/images/ocr/invoice.jpg';
   import { ref, onMounted, onBeforeUnmount } from 'vue';
   import { useResizeObserver } from '@vueuse/core';
   import { debounce } from 'lodash-es';
+  import { UploadOutlined } from '@ant-design/icons-vue';
+  import PdfViewer from '@/components/PdfViewer/index.vue';
 
   defineOptions({
     name: 'WeiXinOcrDemo',
@@ -38,16 +59,19 @@
     locations: OcrLocationItem[];
   }
 
+  const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
+  const PDF_TYPE = 'application/pdf';
+
+  const fileList = ref<File[]>([]);
+  const objectFile = ref({
+    url: '',
+    type: '',
+  });
+
   const imageRef = ref<HTMLElement | null>(null);
   const imageWidth = ref(0);
   const imageHeight = ref(0);
 
-  const blobUrl = ref('');
-  const previewList = [
-    'https://fuss10.elemecdn.com/a/3f/3302e58f9a181d2509f3dc0fa68b0jpeg.jpeg',
-    'https://fuss10.elemecdn.com/1/34/19aa98b1fcb2781c4fba33d850549jpeg.jpeg',
-  ];
-  const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
   const loading = ref<boolean>(false);
   const ocrData = ref<OcrData>({
     originWidth: 0,
@@ -86,6 +110,25 @@
     loading.value = bool;
   };
 
+  const beforeUpload = (file) => {
+    fileList.value = [file];
+    console.log('选择的文件类型：', file.type);
+    const url = URL.createObjectURL(file);
+    if (file.type === PDF_TYPE) {
+      objectFile.value = {
+        url: url,
+        type: PDF_TYPE,
+      };
+    } else {
+      objectFile.value = {
+        url: url,
+        type: 'image',
+      };
+    }
+    clearOcrTextDiv(true);
+    return false;
+  };
+
   const handleUpload = async (file) => {
     showLoading(true);
 
@@ -106,6 +149,10 @@
     } finally {
       showLoading(false);
     }
+  };
+
+  const recognizeImage = async () => {
+    await uploadFromBlobUrl(objectFile.value.url);
   };
 
   async function uploadFromBlobUrl(blobUrl: string) {
@@ -172,16 +219,25 @@
     return fontSize;
   };
 
+  // 清空之前的识别结果
+  const clearOcrTextDiv = (clearData?: boolean) => {
+    const existingDivs = document.getElementsByClassName('ocr-text');
+    console.log('清除 OCR 文字div', existingDivs.length);
+    while (existingDivs.length > 0) {
+      existingDivs[0].parentNode?.removeChild(existingDivs[0]);
+    }
+    if (clearData && ocrData.value.locations.length) {
+      ocrData.value.locations = [];
+    }
+  };
+
   const setOcrTextDiv = () => {
     if (!imageRef.value) return;
     if (ocrData.value.locations.length === 0) return;
     if (imageWidth.value === 0 || imageHeight.value === 0) return;
     console.log('设置 OCR 文字位置');
-    // 清空之前的识别结果
-    const existingDivs = document.getElementsByClassName('ocr-text');
-    while (existingDivs.length > 0) {
-      existingDivs[0].parentNode?.removeChild(existingDivs[0]);
-    }
+    clearOcrTextDiv();
+
     ocrData.value.locations.forEach((ocr) => {
       // 过滤空字符
       if (!ocr.text) return;
@@ -200,10 +256,7 @@
     });
   };
 
-  onMounted(async () => {
-    blobUrl.value = await imageToBlobUrl(InvoiceImage);
-    await uploadFromBlobUrl(blobUrl.value);
-  });
+  onMounted(async () => {});
 
   onBeforeUnmount(() => {
     relayoutOnResize.cancel();
@@ -230,7 +283,9 @@
 <style>
   .ocr-text {
     position: absolute;
+    user-select: text;
     //color: transparent;
     color: red;
+    border: 1px solid green;
   }
 </style>
