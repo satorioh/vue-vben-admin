@@ -39,6 +39,7 @@
   import { debounce } from 'lodash-es';
   import { UploadOutlined } from '@ant-design/icons-vue';
   import PdfViewer from '@/components/PdfViewer/index.vue';
+  import { message } from 'ant-design-vue';
 
   defineOptions({
     name: 'WeiXinOcrDemo',
@@ -245,13 +246,16 @@
       div.className = 'ocr-text';
       const widthRatio = imageWidth.value / ocrData.value.originWidth;
       const heightRatio = imageHeight.value / ocrData.value.originHeight;
+      const itemWidth = ocr.width + 0;
       div.style.top = heightRatio * ocr.y + 'px';
       div.style.left = widthRatio * ocr.x - 4 + 'px';
-      div.style.width = (widthRatio * ocr.width >= 14 ? widthRatio * ocr.width : 14) + 'px';
+      div.style.width = (widthRatio * itemWidth >= 14 ? widthRatio * itemWidth : 14) + 'px';
       div.style.height = heightRatio * ocr.height + 'px';
       // div.style.fontSize =
       //   calculateFontSize(ocr.text, ocr.width * widthRatio, ocr.height * heightRatio) + 'px';
       // div.textContent = ocr.text;
+      // 使用data-属性存储文本
+      div.setAttribute('data-text', ocr.text);
 
       document.getElementsByClassName('ocr-image')[0].appendChild(div);
     });
@@ -274,8 +278,8 @@
   let isSelecting = false;
 
   const handleContainerMouseDown = (e: MouseEvent) => {
-    console.log('handleContainerMouseDown');
     if (e.button !== 0) return;
+    // console.log('handleContainerMouseDown');
     const container = getOcrContainer();
     if (!container) return;
     // 若已有选中，则清空后重新开始新的选取
@@ -283,28 +287,113 @@
       clearAllSelections();
     }
     isSelecting = true;
+
+    // 初始按下位置就在 ocr-text 上时立即选中
+    const target = e.target as HTMLElement;
+    if (target?.classList.contains('ocr-text')) {
+      target.classList.add(SELECTED_CLASS);
+    }
+
     e.preventDefault();
   };
 
   const handleContainerMouseUp = (e: MouseEvent) => {
-    console.log('handleContainerMouseUp');
     if (e.button !== 0) return;
+    // console.log('handleContainerMouseUp');
     isSelecting = false;
   };
 
   const handleContainerMouseLeave = () => {
-    console.log('handleContainerMouseLeave');
+    // console.log('handleContainerMouseLeave');
     isSelecting = false;
   };
 
   const handleContainerMouseOver = (e: MouseEvent) => {
-    console.log('handleContainerMouseOver');
     if (!isSelecting) return;
+    // console.log('handleContainerMouseOver');
     const target = e.target as HTMLElement;
     if (target && target.classList.contains('ocr-text')) {
       target.classList.add(SELECTED_CLASS);
     }
   };
+
+  /* ---------------- 复制功能新增开始 ---------------- */
+
+  /**
+   * 提取当前已选中的 OCR 文本并进行行聚合与排序
+   * 行聚合: 若两块 top 差值 < lineThreshold 视为同一行
+   */
+  const lineThreshold = 6; // px 行合并阈值，可按需要调整
+
+  const buildSelectedOcrText = (): string => {
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>('.ocr-text.' + SELECTED_CLASS));
+    if (!nodes.length) return '';
+
+    // 排序: 先按 top 再按 left
+    nodes.sort((a, b) => {
+      const ta = parseFloat(a.style.top);
+      const tb = parseFloat(b.style.top);
+      if (Math.abs(ta - tb) > lineThreshold) return ta - tb;
+      const la = parseFloat(a.style.left);
+      const lb = parseFloat(b.style.left);
+      return la - lb;
+    });
+
+    // 行聚合
+    const lines: { top: number; items: string[] }[] = [];
+    nodes.forEach((el) => {
+      const top = parseFloat(el.style.top);
+      const text = el.getAttribute('data-text') || '';
+      if (!text) return;
+      const last = lines[lines.length - 1];
+      if (last && Math.abs(last.top - top) <= lineThreshold) {
+        last.items.push(text);
+      } else {
+        lines.push({ top, items: [text] });
+      }
+    });
+
+    // 合并: 同行用空格, 行间用换行
+    return lines
+      .map((l) => l.items.join(''))
+      .join('\n')
+      .trim();
+  };
+
+  /**
+   * 复制事件处理: 拦截系统 copy, 写入聚合文本
+   */
+  const handleCopyEvent = (e: ClipboardEvent) => {
+    console.log('handleCopyEvent');
+    const text = buildSelectedOcrText();
+    if (!text) return; // 没有选中则不拦截, 保持默认行为
+    e.preventDefault();
+    copyText(text);
+  };
+
+  const copyText = async (text) => {
+    console.log('复制文本:', text);
+    try {
+      await navigator.clipboard.writeText(text);
+      message.success('复制成功');
+    } catch (err) {
+      // 降级处理：使用传统方式复制
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        message.success('复制成功');
+      } catch (fallbackErr) {
+        message.error('复制失败');
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
+  /* ---------------- 复制功能新增结束 ---------------- */
 
   const bindContainerEvents = () => {
     const c = getOcrContainer();
@@ -314,6 +403,7 @@
     c.addEventListener('mouseup', handleContainerMouseUp);
     c.addEventListener('mouseleave', handleContainerMouseLeave);
     c.addEventListener('mouseover', handleContainerMouseOver);
+    document.addEventListener('copy', handleCopyEvent);
   };
 
   const unbindContainerEvents = () => {
@@ -324,6 +414,7 @@
     c.removeEventListener('mouseup', handleContainerMouseUp);
     c.removeEventListener('mouseleave', handleContainerMouseLeave);
     c.removeEventListener('mouseover', handleContainerMouseOver);
+    document.removeEventListener('copy', handleCopyEvent);
   };
 
   onMounted(() => {});
@@ -371,10 +462,9 @@
     user-select: none;
     cursor: text;
     transition: background-color 0.12s;
-    //color: transparent;
-    color: red;
-    border: 1px solid blue;
+    //border: 1px solid blue;
   }
+
   .ocr-text.selected {
     /* 使用系统色 + 回退 */
     background: Highlight;
@@ -382,6 +472,6 @@
     /* 回退颜色 */
     background-color: rgba(64, 158, 255, 0.35);
     color: #000;
-    outline: 1px solid #409eff;
+    //outline: 1px solid #409eff;
   }
 </style>
