@@ -1,11 +1,12 @@
 <template>
-  <VuePdfEmbed :source="sourceComputed" v-if="source" :text-layer="true" />
+  <VuePdfEmbed :source="sourceComputed" v-if="source" />
+  <!--  <VuePdfEmbed :source="sourceComputed" v-if="source" :text-layer="true" />-->
 </template>
 
 <script setup lang="ts">
   import { computed } from 'vue';
   import VuePdfEmbed from 'vue-pdf-embed';
-  import 'vue-pdf-embed/dist/styles/textLayer.css';
+  // import 'vue-pdf-embed/dist/styles/textLayer.css';
 
   defineOptions({
     name: 'PdfViewer',
@@ -29,4 +30,9 @@
   });
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+  ::v-deep(canvas) {
+    width: 100% !important;
+    height: auto !important;
+  }
+</style>

@@ -18,7 +18,7 @@
         >识别</el-button
       >
     </div>
-    <div class="preview-container" v-loading="loading">
+    <div class="preview-container" v-loading="loading" ref="previewRef">
       <PdfViewer v-if="objectFile.type === PDF_TYPE" :source="objectFile.url" class="pdf-viewer" />
       <el-image
         v-else
@@ -26,8 +26,6 @@
         :src="objectFile.url"
         preview-teleported
         fit="contain"
-        class="ocr-image"
-        ref="imageRef"
       />
     </div>
   </div>
@@ -68,9 +66,9 @@
     type: '',
   });
 
-  const imageRef = ref<HTMLElement | null>(null);
-  const imageWidth = ref(0);
-  const imageHeight = ref(0);
+  const previewRef = ref<HTMLElement | null>(null);
+  const previewWidth = ref(0);
+  const previewHeight = ref(0);
 
   const loading = ref<boolean>(false);
   const ocrData = ref<OcrData>({
@@ -83,12 +81,12 @@
     setOcrTextDiv();
   }, 200);
 
-  useResizeObserver(imageRef, (entries) => {
+  useResizeObserver(previewRef, (entries) => {
     const entry = entries[0];
     const { width, height } = entry.contentRect;
     // console.log('图片尺寸变化：', width, height);
-    imageWidth.value = width;
-    imageHeight.value = height;
+    previewWidth.value = width;
+    previewHeight.value = height;
     relayoutOnResize();
   });
 
@@ -134,6 +132,7 @@
 
     let formData = new FormData();
     formData.append('file', file);
+    // formData.append('mode', 'line');
 
     try {
       let res = await fetch(apiUrl, {
@@ -232,9 +231,9 @@
   };
 
   const setOcrTextDiv = () => {
-    if (!imageRef.value) return;
+    if (!previewRef.value) return;
     if (ocrData.value.locations.length === 0) return;
-    if (imageWidth.value === 0 || imageHeight.value === 0) return;
+    if (previewWidth.value === 0 || previewHeight.value === 0) return;
     console.log('设置 OCR 文字位置');
     clearOcrTextDiv();
 
@@ -244,8 +243,8 @@
       const div = document.createElement('div');
 
       div.className = 'ocr-text';
-      const widthRatio = imageWidth.value / ocrData.value.originWidth;
-      const heightRatio = imageHeight.value / ocrData.value.originHeight;
+      const widthRatio = previewWidth.value / ocrData.value.originWidth;
+      const heightRatio = previewHeight.value / ocrData.value.originHeight;
       const itemWidth = ocr.width + 0;
       div.style.top = heightRatio * ocr.y + 'px';
       div.style.left = widthRatio * ocr.x - 4 + 'px';
@@ -257,7 +256,7 @@
       // 使用data-属性存储文本
       div.setAttribute('data-text', ocr.text);
 
-      document.getElementsByClassName('ocr-image')[0].appendChild(div);
+      document.getElementsByClassName('preview-container')[0].appendChild(div);
     });
   };
 
@@ -265,7 +264,7 @@
   const SELECTED_CLASS = 'selected';
 
   const getOcrContainer = (): HTMLElement | null => {
-    return document.getElementsByClassName('ocr-image')[0] as HTMLElement | null;
+    return document.getElementsByClassName('preview-container')[0] as HTMLElement | null;
   };
 
   const clearAllSelections = () => {
@@ -387,7 +386,7 @@
         document.execCommand('copy');
         message.success('复制成功');
       } catch (fallbackErr) {
-        message.error('复制失败');
+        message.error('复制失败', fallbackErr);
       }
       document.body.removeChild(textArea);
     }
@@ -444,14 +443,11 @@
     padding: 20px;
     .preview-container {
       width: 100%;
-      height: calc(100vh - 145px);
       overflow: auto;
       text-align: center;
-      .ocr-image {
-        position: relative;
-        ::v-deep(img) {
-          user-select: none;
-        }
+      position: relative;
+      ::v-deep(img) {
+        user-select: none;
       }
     }
   }
