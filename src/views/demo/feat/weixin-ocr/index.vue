@@ -17,8 +17,14 @@
       <el-button class="ml-4" :disabled="fileList.length === 0" @click="recognizeImage"
         >识别</el-button
       >
+      <el-switch class="ml-6" v-model="showBorder" inactive-text="边框" />
     </div>
-    <div class="preview-container" v-loading="loading" ref="previewRef">
+    <div
+      class="preview-container"
+      :class="{ boarder: showBorder }"
+      v-loading="loading"
+      ref="previewRef"
+    >
       <PdfViewer v-if="objectFile.type === PDF_TYPE" :source="objectFile.url" class="pdf-viewer" />
       <el-image
         v-else
@@ -71,6 +77,7 @@
   const previewHeight = ref(0);
 
   const loading = ref<boolean>(false);
+  const showBorder = ref(false);
   const ocrData = ref<OcrData>({
     originWidth: 0,
     originHeight: 0,
@@ -311,8 +318,10 @@
     if (!isSelecting) return;
     // console.log('handleContainerMouseOver');
     const target = e.target as HTMLElement;
-    if (target && target.classList.contains('ocr-text')) {
-      target.classList.add(SELECTED_CLASS);
+    if (target?.classList.contains('ocr-text')) {
+      if (!target.classList.contains(SELECTED_CLASS)) {
+        target.classList.add(SELECTED_CLASS);
+      }
     }
   };
 
@@ -449,6 +458,11 @@
       ::v-deep(img) {
         user-select: none;
       }
+      &.boarder {
+        ::v-deep(.ocr-text) {
+          border: 1px solid blue;
+        }
+      }
     }
   }
 </style>
@@ -458,7 +472,6 @@
     user-select: none;
     cursor: text;
     transition: background-color 0.12s;
-    //border: 1px solid blue;
   }
 
   .ocr-text.selected {
@@ -468,6 +481,5 @@
     /* 回退颜色 */
     background-color: rgba(64, 158, 255, 0.35);
     color: #000;
-    //outline: 1px solid #409eff;
   }
 </style>
