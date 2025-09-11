@@ -63,7 +63,8 @@
     locations: OcrLocationItem[];
   }
 
-  const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
+  // const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
+  const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize_bbox';
   const PDF_TYPE = 'application/pdf';
 
   const fileList = ref<File[]>([]);
