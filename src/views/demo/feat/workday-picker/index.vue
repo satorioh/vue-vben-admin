@@ -12,7 +12,7 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue';
   import dayjs from 'dayjs';
-  import { getWorkdaysOfYear, DATE_FORMAT } from './helper';
+  import { getWorkdaysOfYear, DATE_FORMAT, getResultWorkday } from './helper';
 
   defineOptions({
     name: 'WorkdayPickerDemo',
@@ -29,24 +29,28 @@
 
   const shortcuts = [
     {
-      text: 'Today',
-      value: new Date(),
+      text: '30天后',
+      value: () => getByDays(30),
     },
     {
-      text: 'Yesterday',
-      value: () => {
-        const date = new Date();
-        date.setTime(date.getTime() - 3600 * 1000 * 24);
-        return date;
-      },
+      text: '90天后',
+      value: () => getByDays(90),
     },
     {
-      text: 'A week ago',
-      value: () => {
-        const date = new Date();
-        date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
-        return date;
-      },
+      text: '180天后',
+      value: () => getByDays(180),
+    },
+    {
+      text: '270天后',
+      value: () => getByDays(270),
+    },
+    {
+      text: '360天后',
+      value: () => getByDays(360),
+    },
+    {
+      text: '365天后',
+      value: () => getByDays(365),
     },
   ];
 
@@ -67,9 +71,19 @@
   };
 
   const handleVisibleChange = (visible: boolean) => {
-    if (visible && !date.value) {
+    if (visible && !workdays.value.length) {
       setWorkdaysForYear(dayjs().year());
     }
+  };
+
+  const toDate = (s: string) => dayjs(s, DATE_FORMAT).toDate();
+
+  // 基于当天日期，计算 N 个工作日后的日期
+  const getByDays = (days: number): Date | null => {
+    if (!workdays.value.length) return null;
+    const start = new Date();
+    const resultStr = getResultWorkday(start, days, workdays.value, DATE_FORMAT);
+    return toDate(resultStr);
   };
 </script>
 

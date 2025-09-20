@@ -24,3 +24,36 @@ export const getWorkdaysOfYear = (year) => {
 
   return workdays;
 };
+
+/**
+ * 从 startDate 起，往后/往前数 days 个工作日，返回对应工作日（YYYY-MM-DD）。
+ * - workdays：升序的工作日字符串数组（YYYY-MM-DD）
+ * - 越界时钳制到边界（第一个或最后一个工作日）
+ * - 若 startDate 不在 workdays 中，按就近的前一个工作日作为基准
+ */
+export const getResultWorkday = (
+  startDate: string | Date,
+  days: number,
+  workdays: string[],
+  format: string = DATE_FORMAT,
+): string => {
+  if (!Array.isArray(workdays) || workdays.length === 0) {
+    throw new Error('workdays 不能为空');
+  }
+
+  const startStr = dayjs(startDate).format(format);
+  const step = Math.trunc(days);
+
+  let startIndex = workdays.indexOf(startStr);
+  if (startIndex === -1) {
+    const insertPos = workdays.findIndex((d) => d > startStr);
+    startIndex = insertPos === -1 ? workdays.length - 1 : Math.max(0, insertPos);
+  }
+  console.log('startWorkday', workdays[startIndex]);
+
+  let targetIndex = startIndex + step;
+  if (targetIndex < 0) targetIndex = 0;
+  if (targetIndex >= workdays.length) targetIndex = workdays.length - 1;
+
+  return workdays[targetIndex];
+};
