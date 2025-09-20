@@ -47,7 +47,7 @@ export const getResultWorkday = (
   let startIndex = workdays.indexOf(startStr);
   if (startIndex === -1) {
     const insertPos = workdays.findIndex((d) => d > startStr);
-    startIndex = insertPos === -1 ? workdays.length - 1 : Math.max(0, insertPos);
+    startIndex = insertPos === -1 ? workdays.length - 1 : Math.max(0, insertPos - 1); // 找到就近的前一个工作日（这样就包含下一个工作日）
   }
   console.log('startWorkday', workdays[startIndex]);
 

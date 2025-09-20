@@ -29,6 +29,10 @@
 
   const shortcuts = [
     {
+      text: '5天后',
+      value: () => getByDays(5),
+    },
+    {
       text: '30天后',
       value: () => getByDays(30),
     },
