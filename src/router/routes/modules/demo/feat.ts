@@ -237,6 +237,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'workday-picker',
+      name: 'WorkdayPickerDemo',
+      component: () => import('@/views/demo/feat/workday-picker/index.vue'),
+      meta: {
+        title: '工作日选择',
+      },
+    },
+    {
       path: '/error-log',
       name: 'ErrorLog',
       component: () => import('@/views/sys/error-log/index.vue'),
