@@ -23,16 +23,42 @@
       class="preview-container"
       :class="{ boarder: showBorder }"
       v-loading="loading"
-      ref="previewRef"
     >
-      <PdfViewer v-if="objectFile.type === PDF_TYPE" :source="objectFile.url" class="pdf-viewer" />
-      <el-image
-        v-else
-        style="width: 100%; height: auto"
-        :src="objectFile.url"
-        preview-teleported
-        fit="contain"
-      />
+      <div class="preview-area" ref="previewRef">
+        <PdfViewer
+          v-if="objectFile.type === PDF_TYPE"
+          :source="objectFile.url"
+          class="pdf-viewer"
+        />
+        <el-image
+          v-else
+          style="width: 100%; height: auto"
+          :src="objectFile.url"
+          preview-teleported
+          fit="contain"
+        />
+      </div>
+      <transition name="sidebar-fade">
+        <div v-if="objectFile.url" class="ocr-sidebar">
+          <h3>AI识图</h3>
+          <div class="btn-group">
+            <a-button type="primary" @click="initScreenShot" class="mr-4">截图</a-button>
+            <a-button type="primary" danger @click="emptyScreenShot">清空</a-button>
+          </div>
+          <div class="ocr-result-list">
+            <div v-if="loading" class="ocr-loading-mask"> AI识别中... </div>
+            <template v-else>
+              <OcrResultItem
+                v-for="(item, index) in ocrResult"
+                :key="index"
+                class="ocr-result-item"
+                :model-value="item"
+                @update:model-value="updateOcrResult(index, $event)"
+              />
+            </template>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -44,6 +70,9 @@
   import { UploadOutlined } from '@ant-design/icons-vue';
   import PdfViewer from '@/components/PdfViewer/index.vue';
   import { message } from 'ant-design-vue';
+  import OcrResultItem from '@/views/demo/feat/ocr/OcrResultItem.vue';
+  import { snapdom } from '@zumer/snapdom';
+  import ScreenShot from 'js-web-screen-shot';
 
   defineOptions({
     name: 'WeiXinOcrDemo',
@@ -63,8 +92,8 @@
     locations: OcrLocationItem[];
   }
 
-  // const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
-  const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize_bbox';
+  const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
+  // const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize_bbox';
   const PDF_TYPE = 'application/pdf';
 
   const fileList = ref<File[]>([]);
@@ -170,61 +199,6 @@
       console.error('转换或上传失败', e);
     }
   }
-
-  /**
-   * 计算字体大小的函数
-   *
-   * @param text 需要计算的文本内容
-   * @param targetWidth 目标宽度
-   * @param targetHeight 目标高度
-   * @param minFontSize 最小字体大小，默认为 10
-   * @param maxFontSize 最大字体大小，默认为 100
-   * @param threshold 阈值，用于控制计算精度，默认为 1
-   */
-  const calculateFontSize = (
-    text: string,
-    targetWidth: number,
-    targetHeight: number,
-    minFontSize = 10,
-    maxFontSize = 100,
-    threshold = 1,
-  ): number => {
-    // 创建一个 div 元素作为容器，用于计算实际字体大小
-    const container = document.createElement('div');
-    container.style.display = 'inline-block';
-    container.style.width = `${targetWidth}px`;
-    container.style.height = `${targetHeight}px`;
-    // 创建一个临时的 span 元素，并添加到容器内，用于显示需要计算的文本内容
-    const tempElement = document.createElement('span');
-    tempElement.style.display = 'inline-block';
-    tempElement.style.whiteSpace = 'pre-wrap';
-    tempElement.style.fontFamily = 'Arial, sans-serif';
-    tempElement.innerText = text;
-    container.appendChild(tempElement);
-    document.body.appendChild(container);
-    // 初始化字体大小的取值范围
-    let fontSize = maxFontSize;
-    let lowerBound = minFontSize;
-    let upperBound = maxFontSize;
-    // 使用二分法计算最适合的字体大小
-    while (lowerBound <= upperBound) {
-      fontSize = Math.floor((lowerBound + upperBound) / 2);
-      tempElement.style.fontSize = `${fontSize}px`;
-      // 当计算出的实际宽度或高度大于指定的目标宽度和高度时，缩小字体大小并继续计算
-      if (
-        tempElement.offsetWidth > targetWidth + threshold ||
-        tempElement.offsetHeight > targetHeight + threshold
-      ) {
-        upperBound = fontSize - 1;
-      } else {
-        // 当计算出的实际宽度和高度小于等于指定的目标宽度和高度时，增大字体大小并继续计算
-        lowerBound = fontSize + 1;
-      }
-    }
-    // 从文档中移除容器及其子元素，并返回计算出的最适合的字体大小
-    document.body.removeChild(container);
-    return fontSize;
-  };
 
   // 清空之前的识别结果
   const clearOcrTextDiv = (clearData?: boolean) => {
@@ -426,6 +400,88 @@
     document.removeEventListener('copy', handleCopyEvent);
   };
 
+  /******************************* 侧边栏功能 ***************************************/
+  const screenShotHandler = ref<ScreenShot | null>(null);
+  const ocrResult = ref<string[]>([]);
+  const screenShotApiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize';
+
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result); // 结果是 base64 字符串（带 data:... 前缀）
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob); // 转 base64
+    });
+  };
+
+  const base64ToFile = (base64, filename) => {
+    let arr = base64.split(',');
+    let mime = arr[0].match(/:(.*?);/)[1];
+    let bstr = atob(arr[1]);
+    let n = bstr.length;
+    let u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  const getBodySnapshot = async () => {
+    const blob = await snapdom.toBlob(document.body);
+    // return URL.createObjectURL(blob);
+    return (await blobToBase64(blob)) as string;
+  };
+
+  const completeScreenShotCallback = (data: any) => {
+    console.log('Screenshot complete:', data);
+    const fileName = `screenshot-${Date.now()}.png`;
+    const file = base64ToFile(data.base64, fileName);
+    handleScreenshotUpload(file);
+  };
+
+  const initScreenShot = async () => {
+    const url = await getBodySnapshot();
+    screenShotHandler.value = new ScreenShot({
+      imgSrc: url,
+      enableWebRtc: false,
+      completeCallback: completeScreenShotCallback,
+    });
+  };
+
+  const handleScreenshotUpload = async (file) => {
+    showLoading(true);
+
+    let formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      let res = await fetch(screenShotApiUrl, {
+        method: 'POST',
+        body: formData,
+      });
+      let data = await res.json();
+      console.log('上传成功：', data);
+      const resultText = data.data.result.join('');
+      ocrResult.value.push(resultText);
+    } catch (err) {
+      console.error('上传失败：', err);
+    } finally {
+      showLoading(false);
+    }
+  };
+
+  const emptyScreenShot = () => {
+    ocrResult.value = [];
+  };
+
+  const updateOcrResult = (index, value) => {
+    ocrResult.value[index] = value;
+  };
+
   onMounted(() => {});
 
   onBeforeUnmount(() => {
@@ -450,8 +506,9 @@
 
 <style scoped lang="scss">
   .wx-ocr-demo-page {
-    padding: 20px;
+    padding: 20px 0 20px 20px;
     .preview-container {
+      display: flex;
       width: 100%;
       overflow: auto;
       text-align: center;
@@ -462,6 +519,62 @@
       &.boarder {
         ::v-deep(.ocr-text) {
           border: 1px solid blue;
+        }
+      }
+
+      .preview-area {
+        flex: 1;
+      }
+
+      .ocr-sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 300px;
+        background: #fff;
+        border-left: 1px solid #eee;
+        border-radius: 12px 0 0 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        padding: 24px 16px;
+        box-sizing: border-box;
+        transition: box-shadow 0.3s;
+        overflow: hidden;
+        margin-left: 20px;
+
+        &:hover {
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        h3 {
+          font-size: 16px;
+          font-weight: 500;
+          margin-bottom: 0;
+        }
+
+        .btn-group {
+          margin: 10px 0;
+        }
+      }
+      .ocr-result-list {
+        position: relative;
+        flex: 1;
+        overflow: hidden;
+        overflow-y: auto;
+        .ocr-loading-mask {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          font-size: 14px;
+          color: #333;
+        }
+        .ocr-result-item {
+          margin-bottom: 12px;
         }
       }
     }
