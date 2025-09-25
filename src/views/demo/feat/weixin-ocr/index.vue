@@ -92,8 +92,8 @@
     locations: OcrLocationItem[];
   }
 
-  const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
-  // const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize_bbox';
+  // const apiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize_bbox';
+  const apiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize_bbox';
   const PDF_TYPE = 'application/pdf';
 
   const fileList = ref<File[]>([]);
@@ -403,7 +403,8 @@
   /******************************* 侧边栏功能 ***************************************/
   const screenShotHandler = ref<ScreenShot | null>(null);
   const ocrResult = ref<string[]>([]);
-  const screenShotApiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize';
+  // const screenShotApiUrl = 'http://127.0.0.1:17654/py-api/ocr/recognize';
+  const screenShotApiUrl = 'http://127.0.0.1:7111/py-api/ocr/recognize';
 
   const blobToBase64 = (blob) => {
     return new Promise((resolve, reject) => {
