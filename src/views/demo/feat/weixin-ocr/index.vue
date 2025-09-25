@@ -22,7 +22,7 @@
     <div
       class="preview-container"
       :class="{ boarder: showBorder }"
-      v-loading="loading"
+      v-loading.fullscreen.lock="loading"
     >
       <div class="preview-area" ref="previewRef">
         <PdfViewer
