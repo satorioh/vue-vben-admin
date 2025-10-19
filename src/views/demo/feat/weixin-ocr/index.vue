@@ -261,26 +261,82 @@
     });
   };
 
-  // 鼠标拖拽选取逻辑
+  // 鼠标拖拽选取逻辑（重写）
   let isSelecting = false;
+  let startEl: HTMLElement | null = null;
+  let endEl: HTMLElement | null = null;
+
+  const getPos = (el: HTMLElement) => ({
+    x: parseFloat(el.style.left) || 0,
+    y: parseFloat(el.style.top) || 0,
+  });
+
+  const isSameLine = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    Math.abs(a.y - b.y) <= lineThreshold;
+
+  const updateDragSelection = () => {
+    if (!startEl || !endEl) return;
+
+    const startPos = getPos(startEl);
+    const endPos = getPos(endEl);
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>('.ocr-text'));
+
+    clearAllSelections();
+
+    // 未跨行：同行选择 x 区间（含反向拖拽）
+    if (isSameLine(startPos, endPos)) {
+      const minX = Math.min(startPos.x, endPos.x);
+      const maxX = Math.max(startPos.x, endPos.x);
+      for (const el of nodes) {
+        const p = getPos(el);
+        if (isSameLine(p, startPos) && p.x >= minX && p.x <= maxX) {
+          el.classList.add(SELECTED_CLASS);
+        }
+      }
+      return;
+    }
+
+    // 跨行：按规则选择
+    const minY = Math.min(startPos.y, endPos.y);
+    const maxY = Math.max(startPos.y, endPos.y);
+
+    for (const el of nodes) {
+      const p = getPos(el);
+
+      // 中间行（严格在 start/end 之间，不含两端行，留出阈值）
+      if (p.y > minY + lineThreshold && p.y < maxY - lineThreshold) {
+        el.classList.add(SELECTED_CLASS);
+        continue;
+      }
+
+      // 开始行：x >= start.x
+      if (isSameLine(p, startPos) && p.x >= startPos.x) {
+        el.classList.add(SELECTED_CLASS);
+        continue;
+      }
+
+      // 结束行：x <= start.x（按你的描述执行）
+      if (isSameLine(p, endPos) && p.x <= endPos.x) {
+        el.classList.add(SELECTED_CLASS);
+        continue;
+      }
+    }
+  };
 
   const handleContainerMouseDown = (e: MouseEvent) => {
     if (e.button !== 0) return;
-    // console.log('handleContainerMouseDown');
     const container = getOcrContainer();
     if (!container) return;
-    // 若已有选中，则清空后重新开始新的选取
-    if (container.querySelector('.ocr-text.' + SELECTED_CLASS)) {
-      clearAllSelections();
-    }
+
+    const target = e.target as HTMLElement | null;
+    if (!target?.classList.contains('ocr-text')) return;
+
+    // 开始新的选取
+    clearAllSelections();
     isSelecting = true;
-
-    // 初始按下位置就在 ocr-text 上时立即选中
-    const target = e.target as HTMLElement;
-    if (target?.classList.contains('ocr-text')) {
-      target.classList.add(SELECTED_CLASS);
-    }
-
+    startEl = target;
+    endEl = target;
+    updateDragSelection();
     e.preventDefault();
   };
 
@@ -297,13 +353,11 @@
 
   const handleContainerMouseOver = (e: MouseEvent) => {
     if (!isSelecting) return;
-    // console.log('handleContainerMouseOver');
-    const target = e.target as HTMLElement;
-    if (target?.classList.contains('ocr-text')) {
-      if (!target.classList.contains(SELECTED_CLASS)) {
-        target.classList.add(SELECTED_CLASS);
-      }
-    }
+    const target = e.target as HTMLElement | null;
+    if (!target?.classList.contains('ocr-text')) return;
+
+    endEl = target;
+    updateDragSelection();
   };
 
   /* ---------------- 复制功能新增开始 ---------------- */
