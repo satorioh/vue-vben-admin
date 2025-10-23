@@ -92,7 +92,8 @@
     locations: OcrLocationItem[];
   }
 
-  const apiPrefix = 'http://127.0.0.1:17654';
+  // const apiPrefix = 'http://127.0.0.1:17654';
+  const apiPrefix = 'http://100.127.94.201:7111';
   // const apiPrefix = 'http://127.0.0.1:7111';
 
   const apiUrl = `${apiPrefix}/py-api/ocr/recognize_bbox`;
