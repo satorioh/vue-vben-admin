@@ -30,6 +30,15 @@ export default defineApplicationConfig({
           ws: true,
           rewrite: (path) => path.replace(new RegExp(`^/upload`), ''),
         },
+        // 新增：OCR 后端代理，避免浏览器跨域
+        '/py-api': {
+          target: 'http://100.127.94.201:7111',
+          changeOrigin: true,
+          ws: true,
+          // rewrite: (path) => path.replace(/^\/py-api/, ''),
+          // 如后端仅支持 http，可保留；若是自签 https，可考虑 secure: false
+          // secure: false,
+        },
       },
       open: true, // 项目启动后，自动打开
       warmup: {

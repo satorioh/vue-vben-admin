@@ -93,11 +93,13 @@
   }
 
   // const apiPrefix = 'http://127.0.0.1:17654';
-  const apiPrefix = 'http://100.127.94.201:7111';
+  // const apiPrefix = 'http://100.127.94.201:7111';
   // const apiPrefix = 'http://127.0.0.1:7111';
+  // 将绝对地址改为相对前缀，走 Vite 代理
+  const apiPrefix = '/py-api';
 
-  const apiUrl = `${apiPrefix}/py-api/ocr/recognize_bbox`;
-  const screenShotApiUrl = `${apiPrefix}/py-api/ocr/recognize`;
+  const apiUrl = `${apiPrefix}/ocr/recognize_bbox`;
+  const screenShotApiUrl = `${apiPrefix}/ocr/recognize`;
   const PDF_TYPE = 'application/pdf';
 
   const fileList = ref<File[]>([]);
