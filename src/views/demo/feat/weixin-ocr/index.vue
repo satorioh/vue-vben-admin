@@ -334,6 +334,8 @@
     const target = e.target as HTMLElement | null;
     if (!target?.classList.contains('ocr-text')) return;
 
+    container.focus(); // 聚焦容器以接收键盘事件
+
     // 开始新的选取
     clearAllSelections();
     isSelecting = true;
@@ -361,6 +363,18 @@
 
     endEl = target;
     updateDragSelection();
+  };
+
+  // 新增：在容器上兜底处理 Cmd/Ctrl+C
+  const handleContainerKeydown = (e: KeyboardEvent) => {
+    console.log('handleContainerKeydown', e.key);
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+      const text = buildSelectedOcrText();
+      if (!text) return;
+      e.preventDefault();
+      // 复用已有复制逻辑（也顺便消除 copyText 未使用的 ESLint 告警）
+      copyText(text);
+    }
   };
 
   /* ---------------- 复制功能新增开始 ---------------- */
@@ -414,7 +428,21 @@
     const text = buildSelectedOcrText();
     if (!text) return; // 没有选中则不拦截, 保持默认行为
     e.preventDefault();
-    copyText(text);
+    writeToClipboard(e, text);
+  };
+
+  const writeToClipboard = (e: ClipboardEvent, text: string) => {
+    try {
+      // 首选：在 copy 事件里写入剪贴板（无需安全上下文）
+      if (e.clipboardData) {
+        e.clipboardData.setData('text/plain', text);
+        message.success('复制成功');
+      } else {
+        throw new Error('clipboardData 不可用');
+      }
+    } catch (err) {
+      message.error('复制失败', err);
+    }
   };
 
   const copyText = async (text) => {
@@ -445,11 +473,14 @@
     const c = getOcrContainer();
     if (!c) return;
     console.log('绑定 OCR 容器事件');
+
+    c.setAttribute('tabindex', '0'); // 使容器可聚焦以接收键盘事件
     c.addEventListener('mousedown', handleContainerMouseDown);
     c.addEventListener('mouseup', handleContainerMouseUp);
     c.addEventListener('mouseleave', handleContainerMouseLeave);
     c.addEventListener('mouseover', handleContainerMouseOver);
-    document.addEventListener('copy', handleCopyEvent);
+    // c.addEventListener('copy', handleCopyEvent);
+    c.addEventListener('keydown', handleContainerKeydown);
   };
 
   const unbindContainerEvents = () => {
@@ -460,7 +491,8 @@
     c.removeEventListener('mouseup', handleContainerMouseUp);
     c.removeEventListener('mouseleave', handleContainerMouseLeave);
     c.removeEventListener('mouseover', handleContainerMouseOver);
-    document.removeEventListener('copy', handleCopyEvent);
+    // c.removeEventListener('copy', handleCopyEvent);
+    c.removeEventListener('keydown', handleContainerKeydown);
   };
 
   /******************************* 侧边栏功能 ***************************************/
