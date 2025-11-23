@@ -32,7 +32,9 @@ export default defineApplicationConfig({
         },
         // 新增：OCR 后端代理，避免浏览器跨域
         '/py-api': {
-          target: 'http://100.127.94.201:7111',
+          // target: 'http://100.127.94.201:7111',
+          target: 'http://127.0.0.1:17654',
+          // target: 'http://127.0.0.1:7111',
           changeOrigin: true,
           ws: true,
           // rewrite: (path) => path.replace(/^\/py-api/, ''),

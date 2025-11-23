@@ -5,7 +5,7 @@
         :file-list="fileList"
         :showUploadList="false"
         :maxCount="1"
-        accept="image/*,.pdf"
+        accept="image/*,.pdf,.docx,.doc,.xlsx,.xls,.ppt,.pptx"
         :before-upload="beforeUpload"
         :show-file-list="false"
       >
