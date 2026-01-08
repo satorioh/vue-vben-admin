@@ -5,6 +5,7 @@
       :key="index"
       class="tab-item"
       :class="{ active: modelValue === item.value }"
+      :style="{ '--tab-bg-inactive': inactiveBg }"
       @click="handleTabClick(item.value)"
     >
       {{ item.label }}
@@ -28,6 +29,11 @@
         { label: '企业', value: 'enterprise' },
         { label: '个人', value: 'person' },
       ],
+    },
+    // 未激活 tab 背景色（可外部传入）
+    inactiveBg: {
+      type: String,
+      default: '#fff',
     },
   });
 
@@ -66,7 +72,7 @@
     color: #595959;
     transition: all 0.3s;
     /* 默认状态（未激活）：可以是白色背景或者透明 */
-    background: #fff;
+    background: var(--tab-bg-inactive, #fff);
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     /* 加上这行是为了让未激活的层级低一点，避免盖住弧度 */
