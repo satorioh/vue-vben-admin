@@ -245,6 +245,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'smooth-tab',
+      name: 'SmoothTabDemo',
+      component: () => import('@/views/demo/feat/smooth-tab/index.vue'),
+      meta: {
+        title: '自定义tab组件',
+      },
+    },
+    {
       path: '/error-log',
       name: 'ErrorLog',
       component: () => import('@/views/sys/error-log/index.vue'),
