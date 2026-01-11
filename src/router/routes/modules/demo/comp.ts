@@ -597,6 +597,14 @@ const comp: AppRouteModule = {
         title: '自定义鼠标',
       },
     },
+    {
+      path: 'circleProgress',
+      name: 'CircleChartDemo',
+      component: () => import('@/views/demo/comp/circleProgress/index.vue'),
+      meta: {
+        title: '逆时针环形进度条',
+      },
+    },
   ],
 };
 
