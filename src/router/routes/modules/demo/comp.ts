@@ -598,6 +598,14 @@ const comp: AppRouteModule = {
       },
     },
     {
+      path: 'customDrawer',
+      name: 'CustomDrawerDemo',
+      component: () => import('@/views/demo/feat/custom-drawer/index.vue'),
+      meta: {
+        title: '自定义抽屉',
+      },
+    },
+    {
       path: 'circleProgress',
       name: 'CircleChartDemo',
       component: () => import('@/views/demo/comp/circleProgress/index.vue'),
