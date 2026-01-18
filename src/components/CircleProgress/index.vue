@@ -41,7 +41,7 @@
     // 轨道颜色
     trackColor: {
       type: String,
-      default: '#7D859234',
+      default: '#7D8592',
     },
   });
 </script>

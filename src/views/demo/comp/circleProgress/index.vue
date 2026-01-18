@@ -38,10 +38,6 @@
 </script>
 
 <style scoped>
-  .reverse-progress :deep(.el-progress-circle) {
-    transform: scaleX(-1);
-  }
-
   .percentage-text {
     color: #15c0e6;
     text-align: center;
