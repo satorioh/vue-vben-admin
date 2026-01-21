@@ -24,7 +24,9 @@
             <div class="main-container">融资规模</div>
             <div class="right-top">本月 新增信息</div>
             <div class="right-bottom">走访热力图</div>
-            <div class="bottom-container">AI分析</div>
+            <div class="bottom-container">
+              <Analysis />
+            </div>
           </div>
         </div>
       </Transition>
@@ -36,6 +38,7 @@
   import { ref } from 'vue';
   import lineArrow from '@/assets/images/bi/line_arrow.png';
   import EmployeeTable from '@/views/demo/feat/bi/components/EmployeeTable.vue';
+  import Analysis from '@/views/demo/feat/bi/components/Analysis.vue';
 
   // 控制新页面显示的变量
   const visible = ref(false);
