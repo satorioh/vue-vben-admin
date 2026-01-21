@@ -22,7 +22,9 @@
               <EmployeeTable />
             </div>
             <div class="main-container">融资规模</div>
-            <div class="right-top">本月 新增信息</div>
+            <div class="right-top">
+              <MonthInfo />
+            </div>
             <div class="right-bottom">
               <VisitHotMap />
             </div>
@@ -42,6 +44,7 @@
   import EmployeeTable from '@/views/demo/feat/bi/components/EmployeeTable.vue';
   import Analysis from '@/views/demo/feat/bi/components/Analysis.vue';
   import VisitHotMap from '@/views/demo/feat/bi/components/VisitHotMap.vue';
+  import MonthInfo from '@/views/demo/feat/bi/components/MonthInfo.vue';
 
   // 控制新页面显示的变量
   const visible = ref(false);
