@@ -18,7 +18,9 @@
           </div>
 
           <div class="body">
-            <div class="left-one">表格</div>
+            <div class="left-one">
+              <EmployeeTable />
+            </div>
             <div class="main-container">融资规模</div>
             <div class="right-top">本月 新增信息</div>
             <div class="right-bottom">走访热力图</div>
@@ -33,6 +35,7 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import lineArrow from '@/assets/images/bi/line_arrow.png';
+  import EmployeeTable from '@/views/demo/feat/bi/components/EmployeeTable.vue';
 
   // 控制新页面显示的变量
   const visible = ref(false);
@@ -115,8 +118,7 @@
       left: 0;
       width: 413px;
       height: 720px;
-      border-radius: 16px;
-      border: 1px solid #e1e1e1;
+      border-right: 1px solid #f5f5f5;
       background: #fff;
     }
 
@@ -160,8 +162,12 @@
       width: 989px;
       height: 137px;
       border-radius: 16px;
-      border: 1px solid #e1e1e1;
-      background: #fff;
+      border: 1px solid var(linear-gradient(145deg, #53eafd 0%, #ad46ff 97.7%), #53eafd);
+      background: linear-gradient(
+        120deg,
+        rgba(239, 253, 255, 0.2) 18.47%,
+        rgba(242, 226, 255, 0.2) 81.53%
+      );
     }
   }
 
