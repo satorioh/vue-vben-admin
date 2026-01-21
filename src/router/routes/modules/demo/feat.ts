@@ -253,6 +253,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'bi',
+      name: 'BIDemo',
+      component: () => import('@/views/demo/feat/bi/index.vue'),
+      meta: {
+        title: 'BI',
+      },
+    },
+    {
       path: '/error-log',
       name: 'ErrorLog',
       component: () => import('@/views/sys/error-log/index.vue'),
