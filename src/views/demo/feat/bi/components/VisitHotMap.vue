@@ -81,59 +81,54 @@
   const monthLabels = ref([]);
 
   // 模拟数据生成器
+  // 模拟数据生成器
   const generateData = () => {
     const weeks = [];
     const months = [];
+    const MIN_LABEL_GAP = 3; // 最小间隔列数，避免标签重叠
 
-    // 1. 确定时间范围
-    // 结束时间：本周日 (为了让最右边一列完整或者是当前周)
-    // 如果要最右侧是“当前周”，我们取“今天”所在的周日作为锚点
     const today = dayjs();
-    // 获取本周日（dayjs默认周日是0，我们要把周日当做一周的最后一天）
-    // 简单的做法：找到本周一，然后+6天
     const currentWeekMonday = today.startOf('week').add(1, 'day');
     const endDate = currentWeekMonday.add(6, 'day');
 
-    // 起始时间：向前推 15 周
     let currentDate = endDate.subtract(COLUMNS * 7 - 1, 'day');
 
-    // 2. 遍历生成 15 周的数据
     for (let w = 0; w < COLUMNS; w++) {
       const weekData = [];
-      let hasMonthChange = false;
-      let monthLabelText = '';
 
       for (let d = 0; d < 7; d++) {
         const dateStr = currentDate.format('YYYY-MM-DD');
-        const isFirstDayOfMonth = currentDate.date() === 1;
 
-        // 记录月份标签 (如果是每列的第一天且是月初，或者是第一列)
-        // 简化逻辑：如果这一周包含了某个月的1号，或者这是第一周，就标记月份
+        // 记录月份标签
         if ((d === 0 && w === 0) || currentDate.date() === 1) {
-          // 只有当这一周还没标记过月份时才添加 (避免一周显示两次)
           const mLabel = currentDate.format('YYYY.M');
-          // 简单的去重逻辑，防止同一行出现过于密集的月份
           const lastLabel = months[months.length - 1];
-          if (!lastLabel || lastLabel.text !== mLabel) {
-            // 计算月份标签的大致位置：当前周索引 * (块宽+间距)
+
+          // 检查与上一个标签的距离是否足够
+          const lastLabelWeek = lastLabel
+            ? Math.floor(lastLabel.left / TOTAL_WEEK_WIDTH)
+            : -MIN_LABEL_GAP;
+          const hasEnoughGap = w - lastLabelWeek >= MIN_LABEL_GAP;
+
+          if ((!lastLabel || lastLabel.text !== mLabel) && hasEnoughGap) {
             months.push({
               text: mLabel,
               left: w * TOTAL_WEEK_WIDTH,
             });
+          } else if (lastLabel && !hasEnoughGap && currentDate.date() === 1) {
+            // 如果是月初但距离太近，替换上一个标签（优先显示月初）
+            lastLabel.text = mLabel;
+            lastLabel.left = w * TOTAL_WEEK_WIDTH;
           }
         }
 
-        // 模拟随机数据: 0-5次
-        // 故意让周末数据少一点，模拟真实感
         let count = 0;
         if (currentDate.isAfter(today)) {
-          // 未来日期没数据
           count = 0;
         } else {
-          // 随机生成
           const baseChance = Math.random();
-          if (baseChance > 0.6) count = Math.floor(Math.random() * 5); // 40%概率有数据
-          if (d >= 5 && Math.random() > 0.3) count = 0; // 周末大概率没数据
+          if (baseChance > 0.6) count = Math.floor(Math.random() * 5);
+          if (d >= 5 && Math.random() > 0.3) count = 0;
         }
 
         weekData.push({
