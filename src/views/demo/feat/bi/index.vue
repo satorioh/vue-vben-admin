@@ -57,6 +57,7 @@
 <script lang="ts" setup>
   import { ref, watch, onUnmounted, nextTick } from 'vue';
   import { debounce } from 'lodash-es';
+  // 请确保以下路径指向您的真实文件
   import lineArrow from '@/assets/images/bi/line_arrow.png';
   import EmployeeTable from '@/views/demo/feat/bi/components/EmployeeTable.vue';
   import Analysis from '@/views/demo/feat/bi/components/Analysis.vue';
@@ -71,19 +72,37 @@
 
   const scaleBoxRef = ref<HTMLElement | null>(null);
 
-  // 设计稿尺寸
+  // 设计稿固定尺寸
   const DESIGN_WIDTH = 1440;
   const DESIGN_HEIGHT = 888;
 
   const setScale = () => {
     if (!scaleBoxRef.value) return;
-    const scaleX = window.innerWidth / 1440;
-    const scaleY = window.innerHeight / 888;
-    // 直接拉伸，填满屏幕
-    scaleBoxRef.value.style.transform = `scale(${scaleX}, ${scaleY})`;
+
+    // 1. 获取当前可视区域宽度
+    const windowWidth = window.innerWidth;
+
+    // 2. 计算缩放比例：只依据宽度计算，保持纵横比
+    const scale = windowWidth / DESIGN_WIDTH;
+
+    // 3. 应用缩放 (原点设为左上角)
+    scaleBoxRef.value.style.transform = `scale(${scale})`;
+
+    // 4. 关键：动态设置容器高度
+    // 因为 position: absolute 的元素缩放后不会撑开父容器
+    // 我们需要手动计算缩放后的实际高度，赋值给父容器或占位，以确保滚动条正确出现
+    // 这里我们直接设置 scaleBox 的 margin-bottom 或者在父级处理，
+    // 最简单的方式是给 scale-box 设置显式的宽高，依靠父级 overflow: auto
+    scaleBoxRef.value.style.width = `${DESIGN_WIDTH}px`;
+    scaleBoxRef.value.style.height = `${DESIGN_HEIGHT}px`;
+
+    // 如果想要滚动条完美贴合缩放后的底部，可以给父容器的一个 padding-bottom 占位
+    // 但通常 overflow: auto 配合内容自然撑开即可。
+    // 注意：由于 scale 是视觉效果，Dom 占据的空间还是 1440x888。
+    // 为了防止出现横向滚动条，我们在 CSS 里的 .body 设置了 overflow-x: hidden
   };
 
-  // 监听窗口变化
+  // 防抖监听窗口变化
   const resizeHandler = debounce(() => {
     setScale();
   }, 100);
@@ -93,16 +112,16 @@
   });
   // --- 适配逻辑结束 ---
 
-  // 控制新页面显示的变量
+  // 控制显示
   const visible = ref(false);
 
   const showDetail = (bool: boolean) => {
     visible.value = bool;
   };
 
-  // 当 visible 变为 true 时，因为有 v-if，需要等待 DOM 渲染后执行一次计算
   watch(visible, async (val) => {
     if (val) {
+      // 等待 DOM 渲染完成后再计算
       await nextTick();
       setScale();
       window.addEventListener('resize', resizeHandler);
@@ -113,18 +132,15 @@
 </script>
 
 <style lang="scss" scoped>
-  /* 主页面样式模拟 */
+  /* 主页面 */
   .main-page {
-    /* 确保父容器是 relative，这样内部的 absolute 子元素才会相对于它定位 */
     position: relative;
     height: 100vh;
     background-color: #f0f2f5;
     padding: 20px;
-    /* 添加 overflow: hidden 以防止动画过程中内容溢出边界 */
     overflow: hidden;
   }
 
-  /* 1. 右上角按钮定位 */
   .detail-btn {
     position: absolute;
     top: 20px;
@@ -132,30 +148,28 @@
     z-index: 10;
   }
 
-  /* 2. 覆盖层样式调整 */
+  /* 覆盖层 */
   .full-screen-overlay {
-    /* 【改动点 3】: 从 fixed 改为 absolute */
     position: absolute;
     top: 0;
     left: 0;
-    /* 【改动点 4】: 宽高改为 100%，填满父容器 (.main-page) */
     width: 100%;
     height: 100%;
     background-color: white;
-    /* z-index 确保盖住原本的内容和按钮 */
     z-index: 100;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    overflow: auto;
+    /* 这里不加 overflow，滚动交给 .body */
   }
 
-  /* 内容区域简单排版 (保持不变) */
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* 固定头部高度，不参与缩放 */
     height: 50px;
+    flex-shrink: 0;
     padding: 12px 16px;
     border-bottom: 0.571px solid #f3f4f6;
     background: linear-gradient(90deg, #f5f3ff 0%, #fefeff 100%);
@@ -163,25 +177,26 @@
       display: flex;
       align-items: center;
       color: #1e2939;
-      font-family: 'Alibaba PuHuiTi 3.0';
       font-size: 18px;
-      font-style: normal;
       font-weight: 600;
-      line-height: 27px; /* 150% */
       img {
         margin-right: 8px;
       }
     }
   }
 
+  /* 核心内容区域 */
   .body {
     position: relative;
     flex: 1;
     width: 100%;
+    /* 关键样式：高度铺满，y轴自动滚动，x轴隐藏防止微小误差 */
     height: 100%;
-    overflow: hidden;
-    background-color: #fff;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #fff; /* 这里的背景色即为“底部留白”的颜色 */
 
+    /* 内部组件样式保持原样 */
     .left-one {
       position: absolute;
       top: 0;
@@ -194,20 +209,14 @@
 
     .area-title {
       color: #000;
-      font-family: 'Alibaba PuHuiTi 3.0';
       font-size: 16px;
-      font-style: normal;
       font-weight: 500;
-      line-height: 20px; /* 125% */
     }
 
     .area-title-gray {
       color: #8c8c8c;
-      font-family: 'Alibaba PuHuiTi 3.0';
       font-size: 12px;
-      font-style: normal;
       font-weight: 500;
-      line-height: 20px; /* 166.667% */
     }
 
     .main-container {
@@ -295,7 +304,7 @@
       width: 989px;
       height: 137px;
       border-radius: 16px;
-      border: 1px solid var(linear-gradient(145deg, #53eafd 0%, #ad46ff 97.7%), #53eafd);
+      border: 1px solid #53eafd;
       background: linear-gradient(
         120deg,
         rgba(239, 253, 255, 0.2) 18.47%,
@@ -304,38 +313,31 @@
     }
   }
 
+  /* 缩放容器 */
   .scale-box {
     position: absolute;
+    /* 关键：从左上角开始缩放 */
     transform-origin: left top;
     width: 1440px;
     height: 888px;
   }
 
-  /* --- 【改动点 5】: 核心动效调整 --- */
-
-  /* 新的动画名称: expand-from-tr (从右上角展开)
-*/
+  /* 进场动画：从右上角展开 */
   .expand-from-tr-enter-active,
   .expand-from-tr-leave-active {
-    /* 稍微增加了一点时间，让大范围的移动看起来更舒适 */
     transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-    /* 【关键】：设置变换原点为右上角 */
     transform-origin: top right;
   }
 
-  /* 进入前和离开后的状态 */
   .expand-from-tr-enter-from,
   .expand-from-tr-leave-to {
     opacity: 0;
-    /* 【关键】：从完全缩小 (scale(0)) 开始 */
     transform: scale(0);
   }
 
-  /* 进入后和离开前的状态 (保持常态) */
   .expand-from-tr-enter-to,
   .expand-from-tr-leave-from {
     opacity: 1;
-    /* 恢复到正常大小 */
     transform: scale(1);
   }
 </style>
