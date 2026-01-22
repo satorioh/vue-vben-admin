@@ -1,5 +1,6 @@
 <template>
   <div class="heatmap-card">
+    <FeedBack type="走访热力图" employee-name="张三" class="feed-back" />
     <div class="header">
       <div class="title">走访热力图</div>
       <div class="legend">
@@ -68,6 +69,7 @@
   import { ref, onMounted } from 'vue';
   import dayjs from 'dayjs'; // 建议安装 dayjs: npm install dayjs
   import 'dayjs/locale/zh-cn';
+  import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
 
   dayjs.locale('zh-cn');
 
@@ -173,13 +175,27 @@
   $color-text-sub: #9ca3af; /* 标签文字颜色 */
 
   .heatmap-card {
+    position: relative;
     padding: 12px 16px;
     display: inline-block;
+    &:hover {
+      .feed-back {
+        visibility: visible;
+      }
+    }
+  }
+
+  .feed-back {
+    visibility: hidden;
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    transition: visibility 0.3s;
   }
 
   .header {
     display: flex;
-    justify-content: space-between;
+    //justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 
@@ -187,18 +203,19 @@
       font-size: 20px;
       font-weight: bold;
       color: #1f2937;
+      margin-right: 12px;
     }
 
     .legend {
       display: flex;
-      gap: 16px;
+      gap: 10px;
       font-size: 14px;
       color: #6b7280;
 
       .legend-item {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 2px;
       }
 
       .color-box {
