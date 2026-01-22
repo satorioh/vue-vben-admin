@@ -21,7 +21,10 @@
             <div class="left-one">
               <EmployeeTable />
             </div>
-            <div class="main-container">融资规模</div>
+            <div class="main-container">
+              <div class="finance-title">融资规模</div>
+              <FinanceChart />
+            </div>
             <div class="right-top">
               <MonthInfo />
             </div>
@@ -45,6 +48,7 @@
   import Analysis from '@/views/demo/feat/bi/components/Analysis.vue';
   import VisitHotMap from '@/views/demo/feat/bi/components/VisitHotMap.vue';
   import MonthInfo from '@/views/demo/feat/bi/components/MonthInfo.vue';
+  import FinanceChart from '@/views/demo/feat/bi/components/FinanceChart.vue';
 
   // 控制新页面显示的变量
   const visible = ref(false);
@@ -137,6 +141,7 @@
       left: 434px;
       width: 588px;
       height: 572px;
+      padding: 18px;
       border-radius: 16px;
       border: 1px solid #e1e1e1;
       background: #fff;
