@@ -145,6 +145,15 @@
       border-radius: 16px;
       border: 1px solid #e1e1e1;
       background: #fff;
+
+      .finance-title {
+        color: #000;
+        font-family: 'Alibaba PuHuiTi 3.0';
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 20px; /* 125% */
+      }
     }
 
     .right-top {

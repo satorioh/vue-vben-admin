@@ -8,9 +8,9 @@
 
     <div class="chart-header">
       <div class="step-control" @click="toggleScale">
-        <span class="label">步长与</span>
+        <span class="label">步长</span>
         <el-icon class="icon" :class="{ 'is-active': isLogScale }"><Sort /></el-icon>
-        <span class="tip">(点击切换{{ isLogScale ? '线性' : '指数' }}坐标)</span>
+        <!--        <span class="tip">(点击切换{{ isLogScale ? '线性' : '指数' }}坐标)</span>-->
       </div>
     </div>
 
@@ -107,7 +107,7 @@
         },
       },
       grid: {
-        top: '15%',
+        top: '10%',
         left: '3%',
         right: '4%',
         bottom: '3%',
@@ -217,17 +217,7 @@
 
 <style scoped>
   .chart-container {
-    width: 100%;
-    max-width: 800px; /* 限制宽度以贴合截图 */
-    margin: 20px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-      sans-serif;
   }
-
   /* 覆盖 Element Tabs 样式以贴合设计 */
   :deep(.el-tabs__nav-wrap::after) {
     height: 1px;
@@ -245,8 +235,6 @@
 
   /* 步长控制区 */
   .chart-header {
-    margin-top: 15px;
-    margin-bottom: 10px;
     display: flex;
     align-items: center;
   }
@@ -281,6 +269,6 @@
 
   .echarts-box {
     width: 100%;
-    height: 350px;
+    height: 205px;
   }
 </style>
