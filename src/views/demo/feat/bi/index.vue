@@ -32,7 +32,9 @@
                   <EmployeePieChart />
                 </div>
                 <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
-                <div class=""></div>
+                <div class="project-flow">
+                  <div class="area-title">项目流转</div>
+                </div>
               </div>
             </div>
             <div class="right-top">
@@ -181,7 +183,6 @@
 
       .main-container-bottom {
         display: flex;
-        align-items: center;
 
         .finance-ratio {
           width: 152px;
@@ -191,6 +192,12 @@
 
         .pie-divider {
           height: 190px;
+        }
+
+        .project-flow {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
         }
       }
     }
