@@ -16,7 +16,7 @@
         >
           <div class="tab-label">核心企业</div>
           <div class="tab-number">
-            <CountTo :end-val="companyCount" :duration="1500" />
+            <CountTo :end-val="companyCount" :duration="1000" />
           </div>
         </div>
 
@@ -26,8 +26,8 @@
           @click="switchTab('project')"
         >
           <div class="tab-label">项目数</div>
-          <div class="tab-number">
-            <CountTo :end-val="projectCount" :duration="1500" />
+          <div class="tab-number project-number">
+            <CountTo :end-val="projectCount" :duration="1000" />
           </div>
         </div>
       </div>
@@ -229,6 +229,10 @@
 
       .tab-number {
         color: #a855f7; /* 紫色高亮 */
+      }
+
+      .tab-number.project-number {
+        color: #7075ff; /* 蓝色高亮 */
       }
 
       /* 顶部紫色横条 */
