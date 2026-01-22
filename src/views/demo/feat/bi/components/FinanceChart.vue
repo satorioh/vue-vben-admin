@@ -127,6 +127,13 @@
         name: '',
         min: isLogScale.value ? 1 : 0, // log轴不能从0开始，通常设为1
         logBase: 10, // 指数底数
+
+        // --- 关键修改：强制分割为 2 段 (即显示 3 个刻度值) ---
+        splitNumber: 3,
+
+        // 可选：为了防止数值太小时出现小数刻度，可以加个最小间隔
+        minInterval: 1,
+
         splitLine: {
           lineStyle: {
             type: 'dashed', // 虚线网格
