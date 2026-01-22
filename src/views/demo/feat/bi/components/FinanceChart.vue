@@ -78,6 +78,17 @@
         padding: [10, 15],
         extraCssText: 'box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px;',
         textStyle: { color: '#333' },
+
+        // --- 关键修改：自定义指示器样式 ---
+        axisPointer: {
+          type: 'line', // 指示器类型为直线
+          lineStyle: {
+            color: colorPurple, // 设置为紫色 (与线条同色)
+            type: 'solid', // 设置为实线 (默认是 dashed 虚线)
+            width: 1, // 线宽
+          },
+        },
+
         // 自定义 Tooltip 内容，复刻图中样式
         formatter: (params) => {
           const item = params[0];
