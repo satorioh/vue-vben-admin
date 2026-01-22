@@ -178,6 +178,9 @@
       border-radius: 16px;
       border: 1px solid #e1e1e1;
       background: #fff;
+      &:hover {
+        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25);
+      }
 
       .finance-divider {
         margin: 12px 0;
@@ -213,6 +216,9 @@
       border-radius: 16px;
       border: 1px solid #e1e1e1;
       background: #fff;
+      &:hover {
+        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25);
+      }
     }
 
     .right-bottom {
@@ -224,6 +230,9 @@
       border-radius: 16px;
       border: 1px solid #e1e1e1;
       background: #fff;
+      &:hover {
+        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25);
+      }
     }
 
     .bottom-container {
