@@ -48,7 +48,12 @@
     { name: '落地项目', value: 4, itemStyle: { color: colors.landed } },
     { name: '个人客户', value: 2, itemStyle: { color: colors.individual } },
     { name: '公司客户', value: 2, itemStyle: { color: colors.company } },
-  ];
+  ].map((v) => ({
+    ...v,
+    label: {
+      color: v.itemStyle.color,
+    },
+  }));
 
   // 原始连线数据
   const rawLinks = [
@@ -113,6 +118,8 @@
             show: true,
             position: 'top',
             distance: 4,
+            // 【核心修复点】添加这行，让 label 先继承节点的颜色
+            color: 'inherit',
             formatter: function (params) {
               return `{title|${params.name}}\n{num|${params.value}}`;
             },
