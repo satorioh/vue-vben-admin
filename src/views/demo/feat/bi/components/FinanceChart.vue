@@ -68,6 +68,7 @@
 
     const { xData, yData } = getMockData(activeTab.value);
     const colorPurple = '#8979FF'; // 图中的紫色
+    const shadowColor = 'rgba(137, 121, 255, 1)';
 
     const option = {
       backgroundColor: '#fff',
@@ -139,6 +140,11 @@
           lineStyle: {
             color: colorPurple,
             width: 1,
+            // 偏移量取 0 9px (模拟垂直方向的深度)
+            // 模糊度取 15 (模拟 3px~18px 的混合柔和度)
+            shadowColor: shadowColor,
+            shadowOffsetY: 9,
+            shadowBlur: 15,
           },
           // 区域填充渐变
           // areaStyle: {
