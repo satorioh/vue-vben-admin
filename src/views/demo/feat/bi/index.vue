@@ -25,10 +25,14 @@
               <div class="area-title">融资规模</div>
               <FinanceChart />
               <el-divider border-style="dashed" class="finance-divider" />
-              <div class="finance-ratio">
-                <div class="area-title">融资规模比例</div>
-                <div class="area-title-gray">融资规模在团队中占比</div>
-                <EmployeePieChart />
+              <div class="main-container-bottom">
+                <div class="finance-ratio">
+                  <div class="area-title">融资规模比例</div>
+                  <div class="area-title-gray">融资规模在团队中占比</div>
+                  <EmployeePieChart />
+                </div>
+                <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
+                <div class=""></div>
               </div>
             </div>
             <div class="right-top">
@@ -175,10 +179,19 @@
         margin: 12px 0;
       }
 
-      .finance-ratio {
-        width: 152px;
+      .main-container-bottom {
         display: flex;
-        flex-direction: column;
+        align-items: center;
+
+        .finance-ratio {
+          width: 152px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .pie-divider {
+          height: 190px;
+        }
       }
     }
 
