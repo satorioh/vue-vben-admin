@@ -22,9 +22,14 @@
               <EmployeeTable />
             </div>
             <div class="main-container">
-              <div class="finance-title">融资规模</div>
+              <div class="area-title">融资规模</div>
               <FinanceChart />
-              <el-divider border-style="dashed" />
+              <el-divider border-style="dashed" class="finance-divider" />
+              <div class="finance-ratio">
+                <div class="area-title">融资规模比例</div>
+                <div class="area-title-gray">融资规模在团队中占比</div>
+                <EmployeePieChart />
+              </div>
             </div>
             <div class="right-top">
               <MonthInfo />
@@ -50,6 +55,7 @@
   import VisitHotMap from '@/views/demo/feat/bi/components/VisitHotMap.vue';
   import MonthInfo from '@/views/demo/feat/bi/components/MonthInfo.vue';
   import FinanceChart from '@/views/demo/feat/bi/components/FinanceChart.vue';
+  import EmployeePieChart from '@/views/demo/feat/bi/components/EmployeePieChart.vue';
 
   // 控制新页面显示的变量
   const visible = ref(false);
@@ -136,6 +142,24 @@
       background: #fff;
     }
 
+    .area-title {
+      color: #000;
+      font-family: 'Alibaba PuHuiTi 3.0';
+      font-size: 16px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 20px; /* 125% */
+    }
+
+    .area-title-gray {
+      color: #8c8c8c;
+      font-family: 'Alibaba PuHuiTi 3.0';
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 20px; /* 166.667% */
+    }
+
     .main-container {
       position: absolute;
       top: 14px;
@@ -147,13 +171,14 @@
       border: 1px solid #e1e1e1;
       background: #fff;
 
-      .finance-title {
-        color: #000;
-        font-family: 'Alibaba PuHuiTi 3.0';
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: 20px; /* 125% */
+      .finance-divider {
+        margin: 12px 0;
+      }
+
+      .finance-ratio {
+        width: 152px;
+        display: flex;
+        flex-direction: column;
       }
     }
 
