@@ -8,7 +8,6 @@
     <Teleport to="body">
       <Transition name="fade-scale">
         <div v-if="visible" class="full-screen-overlay">
-          <div class="nav">导航栏区域</div>
           <div class="header">
             <div class="header-left">
               <img :src="lineArrow" alt="arrow" width="20px" />
@@ -105,13 +104,6 @@
     flex-direction: column;
     box-sizing: border-box;
     overflow: auto;
-  }
-
-  .nav {
-    height: 48px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
   /* 内容区域简单排版 */
