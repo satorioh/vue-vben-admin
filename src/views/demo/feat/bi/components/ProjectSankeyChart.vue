@@ -55,13 +55,34 @@
     },
   }));
 
+  // 新建项目到落地项目
+  const getLine3Value = () => {
+    const total = data[0].value + data[1].value;
+    const ratio = data[3].value / data[2].value;
+    return Math.round(total * ratio * 100) / 100;
+  };
+
+  // 落地项目到个人客户
+  const getLine4Value = () => {
+    const total = getLine3Value();
+    const ratio = data[4].value / data[3].value;
+    return Math.round(total * ratio * 100) / 100;
+  };
+
+  // 落地项目到公司客户
+  const getLine5Value = () => {
+    const total = getLine3Value();
+    const ratio = data[5].value / data[3].value;
+    return Math.round(total * ratio * 100) / 100;
+  };
+
   // 原始连线数据
   const rawLinks = [
-    { source: '企业项目', target: '新建项目', value: 12 },
-    { source: '资金方项目', target: '新建项目', value: 10 },
-    { source: '新建项目', target: '落地项目', value: 4 },
-    { source: '落地项目', target: '个人客户', value: 2 },
-    { source: '落地项目', target: '公司客户', value: 2 },
+    { source: '企业项目', target: '新建项目', value: data[0].value },
+    { source: '资金方项目', target: '新建项目', value: data[1].value },
+    { source: '新建项目', target: '落地项目', value: getLine3Value() },
+    { source: '落地项目', target: '个人客户', value: getLine4Value() },
+    { source: '落地项目', target: '公司客户', value: getLine5Value() },
   ];
 
   // 4. 处理连线颜色逻辑
@@ -102,8 +123,8 @@
           type: 'sankey',
           layout: 'none',
           left: '8%',
-          right: '15%',
-          top: '30%',
+          right: '8%',
+          top: '35%',
           bottom: '10%',
           nodeWidth: 16,
           nodeGap: 50,
