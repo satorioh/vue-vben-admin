@@ -30,7 +30,7 @@
       </div>
 
       <div class="content-area">
-        <el-scrollbar height="320px">
+        <el-scrollbar class="no-scrollbar" height="320px">
           <transition-group name="list-anim" tag="div" class="list-wrapper">
             <template v-if="currentTab === 'company'">
               <div
@@ -155,13 +155,17 @@
   /* 容器样式 */
   .card-container {
     width: 100%;
+    height: 100%;
     max-width: 500px; /* 限制宽度以模拟移动端或小卡片效果 */
+    overflow: hidden;
+    border-radius: 16px;
   }
 
   .custom-card {
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     overflow: hidden;
+    border: none;
   }
 
   .header-title {
@@ -178,7 +182,6 @@
   .tabs-container {
     display: flex;
     justify-content: space-around;
-    padding-bottom: 10px;
     position: relative;
 
     /* 底部淡淡的分隔线 */
@@ -244,6 +247,25 @@
     background-color: #fff;
   }
 
+  .content-area :deep(.no-scrollbar) {
+    /* 兼容性：不影响内容滚动，仅隐藏滚动条外观 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/旧 Edge */
+  }
+
+  .content-area :deep(.no-scrollbar .el-scrollbar__bar) {
+    display: none !important; /* Element Plus 滚动条（轨道/滑块） */
+  }
+
+  .content-area :deep(.no-scrollbar .el-scrollbar__wrap) {
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .content-area :deep(.no-scrollbar .el-scrollbar__wrap::-webkit-scrollbar) {
+    width: 0;
+    height: 0; /* WebKit（Chrome/Safari） */
+  }
+
   .list-wrapper {
     display: flex;
     flex-direction: column;
@@ -254,12 +276,18 @@
 
   /* 通用列表项样式 */
   .list-item {
-    background-color: #f3f0ff; /* 浅紫色背景 */
-    border-radius: 8px;
-    padding: 16px;
-    font-size: 15px;
-    color: #333;
+    border-radius: 10px;
+    padding: 10px;
+    color: #1e2939;
+    font-family: 'Alibaba PuHuiTi 3.0';
+    font-size: 14px;
+    font-style: normal;
     font-weight: 500;
+    line-height: 24px; /* 171.429% */
+  }
+
+  .company-item {
+    background: linear-gradient(90deg, #f4eaff 0%, #fff 100%);
   }
 
   /* 项目卡片特殊布局 */
@@ -267,6 +295,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: linear-gradient(90deg, #eaeaff 0%, #fff 100%);
 
     .proj-col {
       display: flex;
@@ -291,10 +320,9 @@
       .value {
         font-size: 14px;
         color: #000;
-        font-weight: 600;
+        font-weight: 500;
       }
       .num-font {
-        font-family: 'Arial', sans-serif;
       }
     }
   }
