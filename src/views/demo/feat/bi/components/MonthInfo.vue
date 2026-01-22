@@ -1,6 +1,9 @@
 <template>
   <div class="card-container">
-    <el-card class="custom-card" :body-style="{ padding: '0px' }">
+    <el-card
+      class="custom-card"
+      :body-style="{ padding: '0px', height: '100%', display: 'flex', flexDirection: 'column' }"
+    >
       <div class="header-title">
         <h2>本月 新增信息</h2>
       </div>
@@ -30,13 +33,13 @@
       </div>
 
       <div class="content-area">
-        <el-scrollbar class="no-scrollbar" height="320px">
+        <el-scrollbar class="no-scrollbar">
           <transition-group name="list-anim" tag="div" class="list-wrapper">
             <template v-if="currentTab === 'company'">
               <div
                 v-for="(item, index) in companyList"
                 :key="'comp-' + item.id"
-                class="list-item company-item"
+                class="li-item company-item"
                 :style="{ transitionDelay: `${index * 0.05}s` }"
               >
                 {{ item.name }}
@@ -47,7 +50,7 @@
               <div
                 v-for="(item, index) in projectList"
                 :key="'proj-' + item.id"
-                class="list-item project-item"
+                class="li-item project-item"
                 :style="{ transitionDelay: `${index * 0.05}s` }"
               >
                 <div class="proj-col">
@@ -162,6 +165,7 @@
   }
 
   .custom-card {
+    height: 100%;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     overflow: hidden;
@@ -245,6 +249,8 @@
   .content-area {
     padding: 10px 20px 20px;
     background-color: #fff;
+    flex: 1;
+    overflow: hidden; /* 避免滚动条溢出 */
   }
 
   .content-area :deep(.no-scrollbar) {
@@ -276,7 +282,7 @@
   }
 
   /* 通用列表项样式 */
-  .list-item {
+  .li-item {
     border-radius: 10px;
     padding: 6px 10px;
     color: #1e2939;
