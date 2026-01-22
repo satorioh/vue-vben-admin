@@ -16,35 +16,37 @@
         </div>
 
         <div class="body">
-          <div class="left-one">
-            <EmployeeTable />
-          </div>
-          <div class="main-container">
-            <FeedBack type="融资规模" employee-name="张三" class="feed-back" />
-            <div class="area-title">融资规模</div>
-            <FinanceChart />
-            <el-divider border-style="dashed" class="finance-divider" />
-            <div class="main-container-bottom">
-              <div class="finance-ratio">
-                <div class="area-title">融资规模比例</div>
-                <div class="area-title-gray">融资规模在团队中占比</div>
-                <EmployeePieChart />
-              </div>
-              <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
-              <div class="project-flow">
-                <div class="area-title">项目流转</div>
-                <ProjectSankey />
+          <div class="scale-box" ref="scaleBoxRef">
+            <div class="left-one">
+              <EmployeeTable />
+            </div>
+            <div class="main-container">
+              <FeedBack type="融资规模" employee-name="张三" class="feed-back" />
+              <div class="area-title">融资规模</div>
+              <FinanceChart />
+              <el-divider border-style="dashed" class="finance-divider" />
+              <div class="main-container-bottom">
+                <div class="finance-ratio">
+                  <div class="area-title">融资规模比例</div>
+                  <div class="area-title-gray">融资规模在团队中占比</div>
+                  <EmployeePieChart />
+                </div>
+                <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
+                <div class="project-flow">
+                  <div class="area-title">项目流转</div>
+                  <ProjectSankey />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="right-top">
-            <MonthInfo />
-          </div>
-          <div class="right-bottom">
-            <VisitHotMap />
-          </div>
-          <div class="bottom-container">
-            <Analysis />
+            <div class="right-top">
+              <MonthInfo />
+            </div>
+            <div class="right-bottom">
+              <VisitHotMap />
+            </div>
+            <div class="bottom-container">
+              <Analysis />
+            </div>
           </div>
         </div>
       </div>
@@ -53,8 +55,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
-  // 模拟的组件和图片引入，实际使用时请确保路径正确
+  import { ref, watch, onUnmounted, nextTick } from 'vue';
+  import { debounce } from 'lodash-es';
   import lineArrow from '@/assets/images/bi/line_arrow.png';
   import EmployeeTable from '@/views/demo/feat/bi/components/EmployeeTable.vue';
   import Analysis from '@/views/demo/feat/bi/components/Analysis.vue';
@@ -65,12 +67,49 @@
   import ProjectSankey from '@/views/demo/feat/bi/components/ProjectSankeyChart.vue';
   import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
 
+  // --- 适配逻辑开始 ---
+
+  const scaleBoxRef = ref<HTMLElement | null>(null);
+
+  // 设计稿尺寸
+  const DESIGN_WIDTH = 1440;
+  const DESIGN_HEIGHT = 888;
+
+  const setScale = () => {
+    if (!scaleBoxRef.value) return;
+    const scaleX = window.innerWidth / 1440;
+    const scaleY = window.innerHeight / 888;
+    // 直接拉伸，填满屏幕
+    scaleBoxRef.value.style.transform = `scale(${scaleX}, ${scaleY})`;
+  };
+
+  // 监听窗口变化
+  const resizeHandler = debounce(() => {
+    setScale();
+  }, 100);
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', resizeHandler);
+  });
+  // --- 适配逻辑结束 ---
+
   // 控制新页面显示的变量
   const visible = ref(false);
 
   const showDetail = (bool: boolean) => {
     visible.value = bool;
   };
+
+  // 当 visible 变为 true 时，因为有 v-if，需要等待 DOM 渲染后执行一次计算
+  watch(visible, async (val) => {
+    if (val) {
+      await nextTick();
+      setScale();
+      window.addEventListener('resize', resizeHandler);
+    } else {
+      window.removeEventListener('resize', resizeHandler);
+    }
+  });
 </script>
 
 <style lang="scss" scoped>
@@ -138,9 +177,10 @@
   .body {
     position: relative;
     flex: 1;
-    /* 为了演示效果，给 body 里的内容加一个缩放，防止在小屏幕下撑破布局 */
-    transform: scale(1);
-    transform-origin: top left;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #fff;
 
     .left-one {
       position: absolute;
@@ -262,6 +302,13 @@
         rgba(242, 226, 255, 0.2) 81.53%
       );
     }
+  }
+
+  .scale-box {
+    position: absolute;
+    transform-origin: left top;
+    width: 1440px;
+    height: 888px;
   }
 
   /* --- 【改动点 5】: 核心动效调整 --- */
