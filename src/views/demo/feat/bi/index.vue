@@ -5,57 +5,56 @@
 
     <el-button type="primary" class="detail-btn" @click="showDetail(true)"> 详情 </el-button>
 
-    <Teleport to="body">
-      <Transition name="fade-scale">
-        <div v-if="visible" class="full-screen-overlay">
-          <div class="header">
-            <div class="header-left">
-              <img :src="lineArrow" alt="arrow" width="20px" />
-              <span>员工情况</span>
-            </div>
-            <el-button type="primary" link @click="showDetail(false)">收起</el-button>
+    <Transition name="expand-from-tr">
+      <div v-if="visible" class="full-screen-overlay">
+        <div class="header">
+          <div class="header-left">
+            <img :src="lineArrow" alt="arrow" width="20px" />
+            <span>员工情况</span>
           </div>
+          <el-button type="primary" link @click="showDetail(false)">收起</el-button>
+        </div>
 
-          <div class="body">
-            <div class="left-one">
-              <EmployeeTable />
-            </div>
-            <div class="main-container">
-              <FeedBack type="融资规模" employee-name="张三" class="feed-back" />
-              <div class="area-title">融资规模</div>
-              <FinanceChart />
-              <el-divider border-style="dashed" class="finance-divider" />
-              <div class="main-container-bottom">
-                <div class="finance-ratio">
-                  <div class="area-title">融资规模比例</div>
-                  <div class="area-title-gray">融资规模在团队中占比</div>
-                  <EmployeePieChart />
-                </div>
-                <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
-                <div class="project-flow">
-                  <div class="area-title">项目流转</div>
-                  <ProjectSankey />
-                </div>
+        <div class="body">
+          <div class="left-one">
+            <EmployeeTable />
+          </div>
+          <div class="main-container">
+            <FeedBack type="融资规模" employee-name="张三" class="feed-back" />
+            <div class="area-title">融资规模</div>
+            <FinanceChart />
+            <el-divider border-style="dashed" class="finance-divider" />
+            <div class="main-container-bottom">
+              <div class="finance-ratio">
+                <div class="area-title">融资规模比例</div>
+                <div class="area-title-gray">融资规模在团队中占比</div>
+                <EmployeePieChart />
+              </div>
+              <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
+              <div class="project-flow">
+                <div class="area-title">项目流转</div>
+                <ProjectSankey />
               </div>
             </div>
-            <div class="right-top">
-              <MonthInfo />
-            </div>
-            <div class="right-bottom">
-              <VisitHotMap />
-            </div>
-            <div class="bottom-container">
-              <Analysis />
-            </div>
+          </div>
+          <div class="right-top">
+            <MonthInfo />
+          </div>
+          <div class="right-bottom">
+            <VisitHotMap />
+          </div>
+          <div class="bottom-container">
+            <Analysis />
           </div>
         </div>
-      </Transition>
-    </Teleport>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script lang="ts" setup>
   import { ref } from 'vue';
+  // 模拟的组件和图片引入，实际使用时请确保路径正确
   import lineArrow from '@/assets/images/bi/line_arrow.png';
   import EmployeeTable from '@/views/demo/feat/bi/components/EmployeeTable.vue';
   import Analysis from '@/views/demo/feat/bi/components/Analysis.vue';
@@ -77,10 +76,13 @@
 <style lang="scss" scoped>
   /* 主页面样式模拟 */
   .main-page {
+    /* 确保父容器是 relative，这样内部的 absolute 子元素才会相对于它定位 */
     position: relative;
     height: 100vh;
     background-color: #f0f2f5;
     padding: 20px;
+    /* 添加 overflow: hidden 以防止动画过程中内容溢出边界 */
+    overflow: hidden;
   }
 
   /* 1. 右上角按钮定位 */
@@ -91,22 +93,25 @@
     z-index: 10;
   }
 
-  /* 2. 全屏覆盖层样式 */
+  /* 2. 覆盖层样式调整 */
   .full-screen-overlay {
-    position: fixed;
+    /* 【改动点 3】: 从 fixed 改为 absolute */
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: white; /* 或者 #fff */
-    z-index: 2000; /* 确保在最上层，Element Plus 默认遮罩是 2000 左右 */
+    /* 【改动点 4】: 宽高改为 100%，填满父容器 (.main-page) */
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    /* z-index 确保盖住原本的内容和按钮 */
+    z-index: 100;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     overflow: auto;
   }
 
-  /* 内容区域简单排版 */
+  /* 内容区域简单排版 (保持不变) */
   .header {
     display: flex;
     justify-content: space-between;
@@ -133,6 +138,9 @@
   .body {
     position: relative;
     flex: 1;
+    /* 为了演示效果，给 body 里的内容加一个缩放，防止在小屏幕下撑破布局 */
+    transform: scale(1);
+    transform-origin: top left;
 
     .left-one {
       position: absolute;
@@ -256,30 +264,31 @@
     }
   }
 
-  /* --- 3. 核心动效：淡入并逐渐变大 (Fade + Scale) --- */
+  /* --- 【改动点 5】: 核心动效调整 --- */
 
-  /* 进入和离开的过渡时间与缓动曲线 */
-  .fade-scale-enter-active,
-  .fade-scale-leave-active {
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* 使用贝塞尔曲线让放大更自然 */
+  /* 新的动画名称: expand-from-tr (从右上角展开)
+*/
+  .expand-from-tr-enter-active,
+  .expand-from-tr-leave-active {
+    /* 稍微增加了一点时间，让大范围的移动看起来更舒适 */
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* 【关键】：设置变换原点为右上角 */
+    transform-origin: top right;
   }
 
-  /* 进入前的状态 (透明，且稍微缩小) */
-  .fade-scale-enter-from {
+  /* 进入前和离开后的状态 */
+  .expand-from-tr-enter-from,
+  .expand-from-tr-leave-to {
     opacity: 0;
-    transform: scale(0.9); /* 从 90% 大小开始变大 */
+    /* 【关键】：从完全缩小 (scale(0)) 开始 */
+    transform: scale(0);
   }
 
-  /* 离开后的状态 (同上) */
-  .fade-scale-leave-to {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-
-  /* 进入完成/离开前的状态 (不透明，正常大小) */
-  .fade-scale-enter-to,
-  .fade-scale-leave-from {
+  /* 进入后和离开前的状态 (保持常态) */
+  .expand-from-tr-enter-to,
+  .expand-from-tr-leave-from {
     opacity: 1;
+    /* 恢复到正常大小 */
     transform: scale(1);
   }
 </style>
