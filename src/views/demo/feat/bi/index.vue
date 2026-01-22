@@ -24,6 +24,7 @@
             <div class="main-container">
               <div class="finance-title">融资规模</div>
               <FinanceChart />
+              <el-divider border-style="dashed" />
             </div>
             <div class="right-top">
               <MonthInfo />
