@@ -5,6 +5,7 @@
       style="width: 100%"
       :header-cell-style="headerStyle"
       :row-class-name="tableRowClassName"
+      @row-click="handleRowClick"
     >
       <el-table-column label="排名" width="64" align="center">
         <template #default="scope">
@@ -35,13 +36,13 @@
   </div>
 </template>
 
-<script setup>
-  import { reactive } from 'vue';
+<script lang="ts" setup>
+  import { ref, onMounted } from 'vue';
 
   // 模拟数据，完全对应图片内容
-  const tableData = reactive([
+  const tableData = ref([
     { rank: 1, name: '张伟', orders: '22.600', financing: '186.5万', visits: '12次' },
-    { rank: 2, name: '王杨', orders: '23.500', financing: '215.8万', visits: '12次' }, // 这一行需要高亮
+    { rank: 2, name: '王杨', orders: '23.500', financing: '215.8万', visits: '12次' },
     { rank: 3, name: '李娜', orders: '20.8', financing: '168.2万', visits: '10次' },
     { rank: 4, name: '刘芳', orders: '19.8', financing: '152.3万', visits: '10次' },
     { rank: 5, name: '陈明', orders: '18.5', financing: '142.6万', visits: '9次' },
@@ -49,6 +50,9 @@
     { rank: 7, name: '孙杰', orders: '16.8', financing: '128.9万', visits: '112.3万' },
     { rank: 8, name: '周敏', orders: '15.6', financing: '122.5万', visits: '105.8万' },
   ]);
+
+  // 保存选中的员工数据
+  const selectedEmployee = ref(null);
 
   // 表头样式配置
   const headerStyle = {
@@ -58,14 +62,28 @@
     height: '60px', // 增加表头高度
   };
 
-  // 核心逻辑：给特定行添加类名
-  // 这里我们判断如果排名是2，就添加 'highlight-row' 类
+  const handleRowClick = (row) => {
+    selectedEmployee.value = row;
+  };
+
+  // 核心逻辑：给特定行添加高亮类名
   const tableRowClassName = ({ row }) => {
-    if (row.rank === 2) {
+    if (selectedEmployee.value && row.rank === selectedEmployee.value.rank) {
       return 'highlight-row';
     }
     return '';
   };
+
+  // 默认选中第一行
+  onMounted(() => {
+    if (tableData.value.length > 0) {
+      selectedEmployee.value = tableData.value[0];
+    }
+  });
+
+  defineExpose({
+    selectedEmployee,
+  });
 </script>
 
 <style lang="scss" scoped>
@@ -108,6 +126,7 @@
     // 每一行的高度稍微加大
     .el-table__row {
       height: 70px;
+      cursor: pointer; // 鼠标悬停时显示为可点击状态
     }
 
     // 定义高亮行的背景色
