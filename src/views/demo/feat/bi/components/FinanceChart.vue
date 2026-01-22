@@ -67,7 +67,7 @@
     if (!myChart) return;
 
     const { xData, yData } = getMockData(activeTab.value);
-    const colorPurple = '#8b5cf6'; // 图中的紫色
+    const colorPurple = '#8979FF'; // 图中的紫色
 
     const option = {
       backgroundColor: '#fff',
@@ -130,32 +130,31 @@
           // smooth: true, // 平滑曲线
           symbol: 'circle', // 实心圆点
           symbolSize: 8,
-          showSymbol: false, // 默认不显示圆点，hover时显示（ECharts默认行为，也可强制设置）
-          // 只有 hover 时显示 symbol，或者一直显示，根据图示似乎是hover高亮
+          showSymbol: true, // 始终显示圆点
           itemStyle: {
-            color: colorPurple,
-            borderColor: '#fff',
+            color: '#fff',
+            borderColor: colorPurple,
             borderWidth: 2,
           },
           lineStyle: {
             color: colorPurple,
-            width: 2,
+            width: 1,
           },
           // 区域填充渐变
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(139, 92, 246, 0.3)' },
-              { offset: 1, color: 'rgba(139, 92, 246, 0.01)' },
-            ]),
-          },
+          // areaStyle: {
+          //   color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          //     { offset: 0, color: 'rgba(139, 92, 246, 0.3)' },
+          //     { offset: 1, color: 'rgba(139, 92, 246, 0.01)' },
+          //   ]),
+          // },
           data: yData,
           // 选中点的高亮样式
           emphasis: {
-            scale: 1.5,
+            scale: 1.3,
             itemStyle: {
-              borderWidth: 3,
-              shadowBlur: 10,
-              shadowColor: 'rgba(139, 92, 246, 0.5)',
+              color: colorPurple, // 【需求3】填充色变回紫色，实现"实心"
+              borderColor: '#fff', // 加一道白边增加对比度（可选，视觉效果更好）
+              borderWidth: 2,
             },
           },
         },
