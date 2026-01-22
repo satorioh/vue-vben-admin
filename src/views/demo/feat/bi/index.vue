@@ -22,6 +22,7 @@
               <EmployeeTable />
             </div>
             <div class="main-container">
+              <FeedBack type="融资规模" employee-name="张三" class="feed-back" />
               <div class="area-title">融资规模</div>
               <FinanceChart />
               <el-divider border-style="dashed" class="finance-divider" />
@@ -64,6 +65,7 @@
   import FinanceChart from '@/views/demo/feat/bi/components/FinanceChart.vue';
   import EmployeePieChart from '@/views/demo/feat/bi/components/EmployeePieChart.vue';
   import ProjectSankey from '@/views/demo/feat/bi/components/ProjectSankeyChart.vue';
+  import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
 
   // 控制新页面显示的变量
   const visible = ref(false);
@@ -180,6 +182,12 @@
       background: #fff;
       &:hover {
         box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25);
+      }
+
+      .feed-back {
+        position: absolute;
+        top: 16px;
+        right: 20px;
       }
 
       .finance-divider {
