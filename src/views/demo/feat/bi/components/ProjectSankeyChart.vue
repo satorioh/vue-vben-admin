@@ -15,10 +15,19 @@
   const colors = {
     enterprise: '#5680F5', // 企业项目 - 蓝
     funding: '#F2BE05', // 资金方项目 - 黄
-    newProject: '#15C0E6', // 新建项目 - 青/蓝渐变起始
+    newProject: '#15C0E6', // 新建项目 - 青
     landed: '#007D99', // 落地项目 - 深青
     individual: '#31A12B', // 个人客户 - 绿
     company: '#C70612', // 公司客户 - 红
+  };
+
+  // 定义连线颜色变量
+  const lineColors = {
+    enterprise: '#A8C0F3', // 企业项目 - 浅蓝
+    funding: '#F4DB83', // 资金方项目 - 浅黄
+    newProject: '#A4EFFF', // 新建项目 - 浅青
+    individual: '#9BCE9A', // 个人客户 - 浅绿
+    company: '#DC8688', // 公司客户 - 浅红
   };
 
   // 准备数据
