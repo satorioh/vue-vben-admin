@@ -1,5 +1,6 @@
 <template>
   <div class="card-container">
+    <FeedBack type="本月新增信息" employee-name="李四" class="feed-back" />
     <el-card
       class="custom-card"
       :body-style="{ padding: '0px', height: '100%', display: 'flex', flexDirection: 'column' }"
@@ -98,6 +99,7 @@
 
 <script setup>
   import { ref, computed, onMounted } from 'vue';
+  import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
 
   // --- 数据模拟 ---
   const currentTab = ref('company'); // 'company' | 'supplier' | 'project'
@@ -185,11 +187,25 @@
 <style scoped lang="scss">
   /* 容器样式 */
   .card-container {
+    position: relative;
     width: 100%;
     height: 100%;
     max-width: 500px;
     overflow: hidden;
     border-radius: 16px;
+    &:hover {
+      .feed-back {
+        visibility: visible;
+      }
+    }
+
+    .feed-back {
+      visibility: hidden;
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      transition: visibility 0.3s;
+    }
   }
 
   .custom-card {

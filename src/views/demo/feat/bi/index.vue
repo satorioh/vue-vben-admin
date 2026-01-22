@@ -182,12 +182,17 @@
       background: #fff;
       &:hover {
         box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.25);
+        .feed-back {
+          visibility: visible;
+        }
       }
 
       .feed-back {
+        visibility: hidden;
         position: absolute;
         top: 16px;
         right: 20px;
+        transition: visibility 0.3s;
       }
 
       .finance-divider {

@@ -8,7 +8,7 @@
       @confirm="handleAction('like')"
     >
       <template #reference>
-        <div class="icon-btn like-btn" :class="{ active: currentStatus === 'like' }">
+        <div class="icon-btn like-btn">
           <img :src="Zan" alt="like" width="16" />
         </div>
       </template>
@@ -22,7 +22,7 @@
       @confirm="handleAction('dislike')"
     >
       <template #reference>
-        <div class="icon-btn dislike-btn" :class="{ active: currentStatus === 'dislike' }">
+        <div class="icon-btn dislike-btn">
           <img :src="Cai" alt="dislike" width="16" />
         </div>
       </template>
@@ -97,12 +97,6 @@
   /* 鼠标悬停效果 */
   .icon-btn:hover {
     background-color: #ecf5ff;
-  }
-
-  /* 选中激活状态（加深颜色或背景） */
-  .icon-btn.active {
-    color: #fff;
-    background-color: #409eff;
   }
 
   /* 针对图标大小的微调 */
