@@ -269,15 +269,16 @@
   .list-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* 列表项间距 */
+    gap: 9px; /* 列表项间距 */
     padding-right: 10px; /* 留出滚动条位置 */
     overflow-x: hidden; /* 防止动画产生的横向滚动条 */
+    box-sizing: border-box;
   }
 
   /* 通用列表项样式 */
   .list-item {
     border-radius: 10px;
-    padding: 10px;
+    padding: 6px 10px;
     color: #1e2939;
     font-family: 'Alibaba PuHuiTi 3.0';
     font-size: 14px;
