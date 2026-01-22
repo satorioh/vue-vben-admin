@@ -15,7 +15,7 @@
           <el-button type="primary" link @click="showDetail(false)">收起</el-button>
         </div>
 
-        <div class="body">
+        <div class="body" :style="bodyStyle">
           <div class="scale-box" ref="scaleBoxRef">
             <div class="left-one">
               <EmployeeTable />
@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onUnmounted, nextTick } from 'vue';
+  import { ref, watch, onUnmounted, nextTick, computed } from 'vue';
   import { debounce } from 'lodash-es';
   // 请确保以下路径指向您的真实文件
   import lineArrow from '@/assets/images/bi/line_arrow.png';
@@ -67,6 +67,23 @@
   import EmployeePieChart from '@/views/demo/feat/bi/components/EmployeePieChart.vue';
   import ProjectSankey from '@/views/demo/feat/bi/components/ProjectSankeyChart.vue';
   import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
+
+  // --- 【改动点 1】: 配置项区域 ---
+
+  /**
+   * 是否禁止滚动配置项
+   * true:  隐藏滚动条且禁止滚动（超出屏幕的内容将被裁切）
+   * false: 允许纵向滚动（内容超出屏幕时显示滚动条）
+   */
+  const LOCK_SCROLL = false;
+
+  // 根据配置生成 body 的样式
+  const bodyStyle = computed(() => {
+    if (LOCK_SCROLL) {
+      return { overflow: 'hidden' };
+    }
+    return { overflowY: 'auto', overflowX: 'hidden' };
+  });
 
   // --- 适配逻辑开始 ---
 
@@ -88,18 +105,9 @@
     // 3. 应用缩放 (原点设为左上角)
     scaleBoxRef.value.style.transform = `scale(${scale})`;
 
-    // 4. 关键：动态设置容器高度
-    // 因为 position: absolute 的元素缩放后不会撑开父容器
-    // 我们需要手动计算缩放后的实际高度，赋值给父容器或占位，以确保滚动条正确出现
-    // 这里我们直接设置 scaleBox 的 margin-bottom 或者在父级处理，
-    // 最简单的方式是给 scale-box 设置显式的宽高，依靠父级 overflow: auto
+    // 4. 设置容器高度以支撑布局 (仅在允许滚动时此高度有意义，禁止滚动时视觉上会被截断)
     scaleBoxRef.value.style.width = `${DESIGN_WIDTH}px`;
     scaleBoxRef.value.style.height = `${DESIGN_HEIGHT}px`;
-
-    // 如果想要滚动条完美贴合缩放后的底部，可以给父容器的一个 padding-bottom 占位
-    // 但通常 overflow: auto 配合内容自然撑开即可。
-    // 注意：由于 scale 是视觉效果，Dom 占据的空间还是 1440x888。
-    // 为了防止出现横向滚动条，我们在 CSS 里的 .body 设置了 overflow-x: hidden
   };
 
   // 防抖监听窗口变化
@@ -121,7 +129,6 @@
 
   watch(visible, async (val) => {
     if (val) {
-      // 等待 DOM 渲染完成后再计算
       await nextTick();
       setScale();
       window.addEventListener('resize', resizeHandler);
@@ -160,14 +167,12 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    /* 这里不加 overflow，滚动交给 .body */
   }
 
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* 固定头部高度，不参与缩放 */
     height: 50px;
     flex-shrink: 0;
     padding: 12px 16px;
@@ -190,13 +195,12 @@
     position: relative;
     flex: 1;
     width: 100%;
-    /* 关键样式：高度铺满，y轴自动滚动，x轴隐藏防止微小误差 */
+    /* 高度铺满 */
     height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-color: #fff; /* 这里的背景色即为“底部留白”的颜色 */
+    /* overflow 属性现在通过 style 绑定动态控制 */
+    background-color: #fff;
 
-    /* 内部组件样式保持原样 */
+    /* 内部组件样式 */
     .left-one {
       position: absolute;
       top: 0;
@@ -316,13 +320,12 @@
   /* 缩放容器 */
   .scale-box {
     position: absolute;
-    /* 关键：从左上角开始缩放 */
     transform-origin: left top;
     width: 1440px;
     height: 888px;
   }
 
-  /* 进场动画：从右上角展开 */
+  /* 动画 */
   .expand-from-tr-enter-active,
   .expand-from-tr-leave-active {
     transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
