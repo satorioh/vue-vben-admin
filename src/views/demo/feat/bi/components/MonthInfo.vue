@@ -21,6 +21,17 @@
         </div>
 
         <div
+          class="tab-item supplier-tab"
+          :class="{ active: currentTab === 'supplier' }"
+          @click="switchTab('supplier')"
+        >
+          <div class="tab-label">供应商</div>
+          <div class="tab-number supplier-number">
+            <CountTo :end-val="supplierCount" :duration="1000" />
+          </div>
+        </div>
+
+        <div
           class="tab-item"
           :class="{ active: currentTab === 'project' }"
           @click="switchTab('project')"
@@ -40,6 +51,17 @@
                 v-for="(item, index) in companyList"
                 :key="'comp-' + item.id"
                 class="li-item company-item"
+                :style="{ transitionDelay: `${index * 0.05}s` }"
+              >
+                {{ item.name }}
+              </div>
+            </template>
+
+            <template v-if="currentTab === 'supplier'">
+              <div
+                v-for="(item, index) in supplierList"
+                :key="'supp-' + item.id"
+                class="li-item supplier-item"
                 :style="{ transitionDelay: `${index * 0.05}s` }"
               >
                 {{ item.name }}
@@ -75,10 +97,10 @@
 </template>
 
 <script setup>
-  import { ref, computed } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
 
   // --- 数据模拟 ---
-  const currentTab = ref('company'); // 'company' | 'project'
+  const currentTab = ref('company'); // 'company' | 'supplier' | 'project'
 
   const companyList = ref([
     { id: 1, name: '华夏智能科技有限公司' },
@@ -93,6 +115,17 @@
     { id: 10, name: '盛虹控股集团有限公司' },
   ]);
 
+  // 新增：供应商数据
+  const supplierList = ref([
+    { id: 1, name: '苏州精密机械部件厂' },
+    { id: 2, name: '江苏宏达电子元器件有限公司' },
+    { id: 3, name: '常州新材料供应中心' },
+    { id: 4, name: '无锡自动化设备配套厂' },
+    { id: 5, name: '昆山物流运输服务有限公司' },
+    { id: 6, name: '南京环保包装材料厂' },
+    { id: 7, name: '苏州工业园区建材配送' },
+  ]);
+
   const projectList = ref([
     { id: 1, funder: '江苏银行', coreCompany: '苏宁控股集团', amount: '300,000,000' },
     { id: 2, funder: '南京银行', coreCompany: '苏宁控股集团', amount: '150,000,000' },
@@ -104,6 +137,7 @@
 
   // 计算 Tab 上的数字
   const companyCount = computed(() => companyList.value.length);
+  const supplierCount = computed(() => supplierList.value.length); // 新增
   const projectCount = computed(() => projectList.value.length);
 
   // 切换 Tab 方法
@@ -112,9 +146,6 @@
   };
 
   // --- 内置微组件：数字滚动 (CountTo) ---
-  // 在真实项目中，这通常是一个单独的 .vue 文件，这里为了方便展示写在同一个文件里
-  import { onMounted, watch } from 'vue';
-
   const CountTo = {
     props: {
       endVal: { type: Number, required: true },
@@ -131,10 +162,8 @@
         const update = (currentTime) => {
           const elapsed = currentTime - startTime;
           const progress = Math.min(elapsed / props.duration, 1);
-
           // easeOutQuart 缓动函数
           const ease = 1 - Math.pow(1 - progress, 4);
-
           displayValue.value = Math.floor(start + (end - start) * ease);
 
           if (progress < 1) {
@@ -147,9 +176,8 @@
       };
 
       onMounted(() => animate());
-      // 如果数字会变化，可以监听 props.endVal 重新执行 animate
-
-      return () => displayValue.value; // 渲染函数直接返回数字
+      // 简单起见，这里没做 watch 监听 endVal 变化
+      return () => displayValue.value;
     },
   };
 </script>
@@ -159,7 +187,7 @@
   .card-container {
     width: 100%;
     height: 100%;
-    max-width: 500px; /* 限制宽度以模拟移动端或小卡片效果 */
+    max-width: 500px;
     overflow: hidden;
     border-radius: 16px;
   }
@@ -188,7 +216,6 @@
     justify-content: space-around;
     position: relative;
 
-    /* 底部淡淡的分隔线 */
     &::after {
       content: '';
       position: absolute;
@@ -208,8 +235,6 @@
     padding: 15px 0;
     position: relative;
     transition: all 0.3s;
-
-    /* 未选中状态文字颜色 */
     color: #606266;
 
     .tab-label {
@@ -218,7 +243,7 @@
     }
 
     .tab-number {
-      font-size: 32px; /* 大数字 */
+      font-size: 32px;
       font-weight: bold;
       font-family: 'Arial', sans-serif;
     }
@@ -227,15 +252,12 @@
     &.active {
       color: #000;
 
+      /* 默认紫色 (核心企业) */
       .tab-number {
-        color: #a855f7; /* 紫色高亮 */
+        color: #a855f7;
       }
 
-      .tab-number.project-number {
-        color: #7075ff; /* 蓝色高亮 */
-      }
-
-      /* 顶部紫色横条 */
+      /* 顶部横条默认颜色 (核心企业) */
       &::before {
         content: '';
         position: absolute;
@@ -246,6 +268,22 @@
         background: linear-gradient(90deg, #c084fc, #a855f7);
         border-radius: 0 0 4px 4px;
       }
+
+      /* --- 新增：供应商 Tab 选中样式 --- */
+      &.supplier-tab {
+        .tab-number.supplier-number {
+          color: #4799ff; /* 蓝色高亮 */
+        }
+        /* 供应商顶部横条改为蓝色渐变以匹配文字 */
+        &::before {
+          background: linear-gradient(90deg, #7bb7ff, #4799ff);
+        }
+      }
+
+      /* 项目 Tab 选中样式 */
+      .tab-number.project-number {
+        color: #7075ff; /* 原有的蓝色/紫色 */
+      }
     }
   }
 
@@ -254,34 +292,30 @@
     padding: 10px 20px 20px;
     background-color: #fff;
     flex: 1;
-    overflow: hidden; /* 避免滚动条溢出 */
+    overflow: hidden;
   }
 
   .content-area :deep(.no-scrollbar) {
-    /* 兼容性：不影响内容滚动，仅隐藏滚动条外观 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/旧 Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-
   .content-area :deep(.no-scrollbar .el-scrollbar__bar) {
-    display: none !important; /* Element Plus 滚动条（轨道/滑块） */
+    display: none !important;
   }
-
   .content-area :deep(.no-scrollbar .el-scrollbar__wrap) {
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
   }
-
   .content-area :deep(.no-scrollbar .el-scrollbar__wrap::-webkit-scrollbar) {
     width: 0;
-    height: 0; /* WebKit（Chrome/Safari） */
+    height: 0;
   }
 
   .list-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 9px; /* 列表项间距 */
-    padding-right: 10px; /* 留出滚动条位置 */
-    overflow-x: hidden; /* 防止动画产生的横向滚动条 */
+    gap: 9px;
+    padding-right: 10px;
+    overflow-x: hidden;
     box-sizing: border-box;
   }
 
@@ -294,14 +328,20 @@
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
-    line-height: 24px; /* 171.429% */
+    line-height: 24px;
   }
 
+  /* 核心企业背景 */
   .company-item {
     background: linear-gradient(90deg, #f4eaff 0%, #fff 100%);
   }
 
-  /* 项目卡片特殊布局 */
+  /* --- 新增：供应商背景 (浅蓝渐变) --- */
+  .supplier-item {
+    background: linear-gradient(90deg, #e6f1ff 0%, #fff 100%);
+  }
+
+  /* 项目背景 */
   .project-item {
     display: flex;
     justify-content: space-between;
@@ -312,17 +352,16 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-
       &:first-child {
         flex: 0.8;
-      } /* 资金方 */
+      }
       &:nth-child(2) {
         flex: 1.2;
-      } /* 核心企业 */
+      }
       &:last-child {
         flex: 1.2;
         text-align: right;
-      } /* 金额 */
+      }
 
       .label {
         font-size: 12px;
@@ -333,23 +372,19 @@
         color: #000;
         font-weight: 500;
       }
-      .num-font {
-      }
     }
   }
 
-  /* --- Vue TransitionGroup 动效 (从右侧快速进入) --- */
+  /* 动效 */
   .list-anim-enter-active {
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
   .list-anim-leave-active {
-    /* 离开时设为绝对定位，避免布局跳动，或者直接隐藏 */
     display: none;
   }
-
   .list-anim-enter-from {
     opacity: 0;
-    transform: translateX(50px); /* 从右偏移50px进入 */
+    transform: translateX(50px);
   }
   .list-anim-enter-to {
     opacity: 1;
