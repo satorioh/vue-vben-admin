@@ -34,6 +34,7 @@
                 <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
                 <div class="project-flow">
                   <div class="area-title">项目流转</div>
+                  <ProjectSankey />
                 </div>
               </div>
             </div>
@@ -62,6 +63,7 @@
   import MonthInfo from '@/views/demo/feat/bi/components/MonthInfo.vue';
   import FinanceChart from '@/views/demo/feat/bi/components/FinanceChart.vue';
   import EmployeePieChart from '@/views/demo/feat/bi/components/EmployeePieChart.vue';
+  import ProjectSankey from '@/views/demo/feat/bi/components/ProjectSankeyChart.vue';
 
   // 控制新页面显示的变量
   const visible = ref(false);
