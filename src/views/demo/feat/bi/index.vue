@@ -308,7 +308,6 @@
       width: 989px;
       height: 137px;
       border-radius: 16px;
-      border: 1px solid #53eafd;
       background: linear-gradient(
         120deg,
         rgba(239, 253, 255, 0.2) 18.47%,
