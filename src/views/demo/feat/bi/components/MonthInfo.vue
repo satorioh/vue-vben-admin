@@ -248,7 +248,7 @@
     flex: 1;
     text-align: center;
     cursor: pointer;
-    padding: 15px 0;
+    padding: 10px 0;
     position: relative;
     transition: all 0.3s;
     color: #606266;
@@ -305,7 +305,7 @@
 
   /* 内容区域 */
   .content-area {
-    padding: 10px 20px 20px;
+    padding: 10px 20px 10px;
     background-color: #fff;
     flex: 1;
     overflow: hidden;
