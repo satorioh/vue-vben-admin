@@ -1,45 +1,47 @@
 <template>
   <Transition name="expand-from-tr">
     <div v-if="visible" class="full-screen-overlay">
-      <div class="header">
-        <div class="header-left">
-          <img :src="lineArrow" alt="arrow" width="20px" />
-          <span>员工情况</span>
-        </div>
-        <el-button type="primary" link @click="showDetail(false)">收起</el-button>
-      </div>
-
       <div class="body" :style="bodyStyle">
         <div class="scale-box" ref="scaleBoxRef">
-          <div class="left-one">
-            <EmployeeTable />
+          <div class="header">
+            <div class="header-left">
+              <img :src="lineArrow" alt="arrow" width="20px" />
+              <span>员工情况</span>
+            </div>
+            <el-button type="primary" link @click="showDetail(false)">收起</el-button>
           </div>
-          <div class="main-container">
-            <FeedBack type="融资规模" employee-name="张三" class="feed-back" />
-            <div class="area-title">融资规模</div>
-            <FinanceChart />
-            <el-divider border-style="dashed" class="finance-divider" />
-            <div class="main-container-bottom">
-              <div class="finance-ratio">
-                <div class="area-title">融资规模比例</div>
-                <div class="area-title-gray">融资规模在团队中占比</div>
-                <EmployeePieChart />
-              </div>
-              <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
-              <div class="project-flow">
-                <div class="area-title">项目流转</div>
-                <ProjectSankey />
+
+          <div class="bi-content-wrap">
+            <div class="left-one">
+              <EmployeeTable />
+            </div>
+            <div class="main-container">
+              <FeedBack type="融资规模" employee-name="张三" class="feed-back" />
+              <div class="area-title">融资规模</div>
+              <FinanceChart />
+              <el-divider border-style="dashed" class="finance-divider" />
+              <div class="main-container-bottom">
+                <div class="finance-ratio">
+                  <div class="area-title">融资规模比例</div>
+                  <div class="area-title-gray">融资规模在团队中占比</div>
+                  <EmployeePieChart />
+                </div>
+                <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
+                <div class="project-flow">
+                  <div class="area-title">项目流转</div>
+                  <ProjectSankey />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="right-top">
-            <MonthInfo />
-          </div>
-          <div class="right-bottom">
-            <VisitHotMap />
-          </div>
-          <div class="bottom-container">
-            <Analysis />
+            <div class="right-top">
+              <MonthInfo />
+            </div>
+            <div class="right-bottom">
+              <VisitHotMap />
+            </div>
+            <div class="bottom-container">
+              <Analysis />
+            </div>
           </div>
         </div>
       </div>
@@ -99,7 +101,8 @@
 
   // 设计稿固定尺寸
   const DESIGN_WIDTH = 1440;
-  const DESIGN_HEIGHT = 888;
+  // 修改：原高度 888 + Header高度 50
+  const DESIGN_HEIGHT = 938;
 
   const setScale = () => {
     if (!scaleBoxRef.value) return;
@@ -113,7 +116,7 @@
     // 3. 应用缩放 (原点设为左上角)
     scaleBoxRef.value.style.transform = `scale(${scale})`;
 
-    // 4. 设置容器高度以支撑布局 (仅在允许滚动时此高度有意义，禁止滚动时视觉上会被截断)
+    // 4. 设置容器高度以支撑布局
     scaleBoxRef.value.style.width = `${DESIGN_WIDTH}px`;
     scaleBoxRef.value.style.height = `${DESIGN_HEIGHT}px`;
   };
@@ -163,38 +166,61 @@
     box-sizing: border-box;
   }
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 50px;
-    flex-shrink: 0;
-    padding: 12px 16px;
-    border-bottom: 0.571px solid #f3f4f6;
-    background: linear-gradient(90deg, #f5f3ff 0%, #fefeff 100%);
-    .header-left {
-      display: flex;
-      align-items: center;
-      color: #1e2939;
-      font-size: 18px;
-      font-weight: 600;
-      img {
-        margin-right: 8px;
-      }
-    }
-  }
-
   /* 核心内容区域 */
   .body {
     position: relative;
     flex: 1;
     width: 100%;
-    /* 高度铺满 */
     height: 100%;
     /* overflow 属性现在通过 style 绑定动态控制 */
     background-color: #fff;
 
-    /* 内部组件样式 */
+    /* 缩放容器 */
+    .scale-box {
+      position: absolute;
+      transform-origin: left top;
+      width: 1440px;
+      height: 938px; /* 888 + 50 */
+      background-color: #fff;
+
+      /* Header 样式 - 移入此处 */
+      .header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 50px;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        box-sizing: border-box;
+        border-bottom: 0.571px solid #f3f4f6;
+        background: linear-gradient(90deg, #f5f3ff 0%, #fefeff 100%);
+        .header-left {
+          display: flex;
+          align-items: center;
+          color: #1e2939;
+          font-size: 18px;
+          font-weight: 600;
+          img {
+            margin-right: 8px;
+          }
+        }
+      }
+
+      /* 内容包裹层 - 整体下移 */
+      .bi-content-wrap {
+        position: absolute;
+        top: 50px; /* Header 高度 */
+        left: 0;
+        width: 100%;
+        height: 888px;
+      }
+    }
+
+    /* 以下样式无需变动，它们现在位于 .bi-content-wrap 内部 */
     .left-one {
       position: absolute;
       top: 0;
@@ -308,14 +334,6 @@
         rgba(242, 226, 255, 0.2) 81.53%
       );
     }
-  }
-
-  /* 缩放容器 */
-  .scale-box {
-    position: absolute;
-    transform-origin: left top;
-    width: 1440px;
-    height: 888px;
   }
 
   /* 动画 */
