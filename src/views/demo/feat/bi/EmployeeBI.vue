@@ -74,7 +74,7 @@
     /**隐藏滚动条且禁止滚动*/
     lockScroll: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   });
 
