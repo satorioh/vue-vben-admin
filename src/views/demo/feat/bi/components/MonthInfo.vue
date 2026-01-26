@@ -98,7 +98,7 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from 'vue';
+  import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
   import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
 
   // --- 数据模拟 ---
@@ -147,38 +147,64 @@
     currentTab.value = tab;
   };
 
-  // --- 内置微组件：数字滚动 (CountTo) ---
+  // --- 内置微组件：数字滚动 (CountTo) \- 线性无缓动，更匀速 ---
   const CountTo = {
     props: {
       endVal: { type: Number, required: true },
       duration: { type: Number, default: 2000 },
+      // 可选：控制显示小数位；为 0 时显示整数
+      decimals: { type: Number, default: 0 },
     },
     setup(props) {
       const displayValue = ref(0);
+      let rafId = 0;
 
-      const animate = () => {
-        const start = 0;
-        const end = props.endVal;
-        const startTime = performance.now();
-
-        const update = (currentTime) => {
-          const elapsed = currentTime - startTime;
-          const progress = Math.min(elapsed / props.duration, 1);
-          // easeOutQuart 缓动函数
-          const ease = 1 - Math.pow(1 - progress, 4);
-          displayValue.value = Math.floor(start + (end - start) * ease);
-
-          if (progress < 1) {
-            requestAnimationFrame(update);
-          } else {
-            displayValue.value = end;
-          }
-        };
-        requestAnimationFrame(update);
+      const format = (v) => {
+        const d = Math.max(0, props.decimals);
+        return d === 0 ? Math.round(v) : Number(v.toFixed(d));
       };
 
-      onMounted(() => animate());
-      // 简单起见，这里没做 watch 监听 endVal 变化
+      const animate = (from, to) => {
+        if (rafId) cancelAnimationFrame(rafId);
+
+        const startTime = performance.now();
+        const dur = Math.max(16, props.duration);
+
+        const update = (now) => {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / dur, 1);
+
+          // 线性插值：无缓动
+          const value = from + (to - from) * progress;
+          displayValue.value = format(value);
+
+          if (progress < 1) {
+            rafId = requestAnimationFrame(update);
+          } else {
+            displayValue.value = format(to);
+            rafId = 0;
+          }
+        };
+
+        rafId = requestAnimationFrame(update);
+      };
+
+      onMounted(() => {
+        animate(0, props.endVal);
+      });
+
+      watch(
+        () => props.endVal,
+        (next, prev) => {
+          // 从当前显示值继续滚动到新值，过渡更自然
+          animate(displayValue.value, next);
+        },
+      );
+
+      onBeforeUnmount(() => {
+        if (rafId) cancelAnimationFrame(rafId);
+      });
+
       return () => displayValue.value;
     },
   };

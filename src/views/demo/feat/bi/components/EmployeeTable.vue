@@ -9,7 +9,7 @@
     >
       <el-table-column label="排名" width="64" align="center">
         <template #default="scope">
-          <div class="rank-badge">{{ scope.row.rank }}</div>
+          <div class="rank-badge">{{ scope.$index + 1 }}</div>
         </template>
       </el-table-column>
 
