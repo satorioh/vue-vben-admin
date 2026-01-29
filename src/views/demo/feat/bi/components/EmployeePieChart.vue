@@ -49,6 +49,14 @@
 
     // --- 数据处理逻辑 ---
 
+    // 计算总数和当前用户百分比
+    const total = props.teamData.reduce((acc, cur) => acc + cur.value, 0);
+    const currentUserData = props.teamData.find((item) => item.name === props.currentUser);
+    const percent =
+      currentUserData && total > 0
+        ? ((currentUserData.value / total) * 100).toFixed(0) + '%'
+        : '0%';
+
     // 1. 基础层数据：所有人都显示，但半径较短
     const baseData = props.teamData.map((item, index) => {
       const isCurrentUser = item.name === props.currentUser;
@@ -64,17 +72,13 @@
     });
 
     // 2. 高亮层数据：只有当前用户有颜色，其他人透明
-    const highlightData = props.teamData.map((item, index) => {
+    // 移除未使用的 index 参数
+    const highlightData = props.teamData.map((item) => {
       const isCurrentUser = item.name === props.currentUser;
       return {
         ...item,
         label: {
-          show: isCurrentUser, // 只有当前员工显示标签
-          position: 'inner',
-          formatter: '{d}%',
-          color: '#fff',
-          fontSize: 12,
-          fontWeight: 'bold',
+          show: false, // 隐藏原有标签，改为在中心显示
         },
         itemStyle: {
           // 关键点：当前用户显示颜色，其他人设置透明
@@ -85,7 +89,7 @@
 
     const option = {
       title: {
-        text: props.currentUser,
+        text: `${props.currentUser}\n${percent}`, // 姓名换行显示百分比
         left: 'center',
         top: 'center',
         textStyle: {
@@ -93,6 +97,7 @@
           fontSize: 12,
           fontWeight: 500,
           fontFamily: 'Alibaba PuHuiTi 3.0',
+          lineHeight: 18, // 增加行高，防止文字挤在一起
         },
       },
       series: [
