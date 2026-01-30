@@ -1,16 +1,14 @@
 <template>
   <div class="sankey-complete-demo">
     <h1>项目资金流向桑基图</h1>
-    <p class="description">
-      特性：节点16px | 颜色还原 | 标签位于上方 | 垂直自动居中 | 0值节点最小高度
-    </p>
+    <p class="description"> 特性：数据分离模式 | 图形由几何数据驱动 | 文案由展示数据驱动 </p>
     <div class="sankey-container">
       <svg ref="svgRef" width="100%" height="600" @mouseleave="hideTooltip">
         <g v-for="(link, index) in sankeyLinks" :key="`link-${index}`">
           <path
             :d="link.path"
             :fill="link.color"
-            :fill-opacity="0.6"
+            :fill-opacity="0.4"
             @mouseenter="showLinkTooltip($event, link)"
             style="transition: fill-opacity 0.3s"
             class="sankey-link"
@@ -71,13 +69,13 @@
     width: number;
     height: number;
     color: string;
-    value: number;
+    value: string | number; // 修改：支持字符串显示
   }
 
   interface Link {
     source: string;
     target: string;
-    value: number;
+    value: string | number; // 修改：支持字符串显示
     path: string;
     color: string;
   }
@@ -93,43 +91,70 @@
 
       // --- 配置项 ---
       const CONFIG = {
-        NODE_WIDTH: 16, // 节点宽度
-        MIN_NODE_HEIGHT: 1, // 0值或极小值节点的最小高度
-        NODE_HEIGHT_RATIO: 20, // 数值转高度的比例 (1数值 = 20px)
-        GAP: 80, // 节点之间的垂直间距
-        VERTICAL_PADDING: 60, // 顶部留白（给文字留空间）
+        NODE_WIDTH: 16,
+        MIN_NODE_HEIGHT: 1, // 即使几何数据很小，也保留1px
+        NODE_HEIGHT_RATIO: 20, // 几何缩放比例
+        GAP: 80,
+        VERTICAL_PADDING: 60,
       };
 
-      // --- 数据源 (颜色已匹配图片) ---
+      // --- 1. 几何数据 (Raw Data) ---
+      // 作用：仅用于计算图形的高度、粗细、位置。
+      // 技巧：这里的数据都是非0的，为了让图形好看，即使业务上是0，这里也给 1 或 2 占位
       const rawData = reactive({
         nodes: [
-          // 第一层
-          { name: '企业项目', color: '#5B8FF9', value: 2 }, // 蓝
-          { name: '资金方项目', color: '#F6BD16', value: 3 }, // 黄
-
-          // 第二层
-          { name: '新建项目', color: '#00C7E6', value: 5 }, // 青
-
-          // 第三层
-          { name: '落地项目', color: '#006D75', value: 0 }, // 深青/墨绿
-
-          // 第四层
-          { name: '个人客户', color: '#52C41A', value: 0 }, // 绿
-          { name: '公司客户', color: '#D9001B', value: 0 }, // 红
+          { name: '企业项目', color: '#5B8FF9', value: 2 },
+          { name: '资金方项目', color: '#F6BD16', value: 3 },
+          { name: '新建项目', color: '#00C7E6', value: 5 },
+          // 真实业务是0，但为了画出节点，这里给 2
+          { name: '落地项目', color: '#006D75', value: 2 },
+          // 真实业务是0，但为了画出节点，这里给 1
+          { name: '个人客户', color: '#52C41A', value: 1 },
+          { name: '公司客户', color: '#D9001B', value: 1 },
         ],
         links: [
           { source: '企业项目', target: '新建项目', value: 2 },
           { source: '资金方项目', target: '新建项目', value: 3 },
-          { source: '新建项目', target: '落地项目', value: 0 },
-          { source: '落地项目', target: '个人客户', value: 0 },
-          { source: '落地项目', target: '公司客户', value: 0 },
+          { source: '新建项目', target: '落地项目', value: 5 }, // 即使全部流失，也画一条线表示关系
+          { source: '落地项目', target: '个人客户', value: 1 }, // 虚构流量，为了画线
+          { source: '落地项目', target: '公司客户', value: 1 }, // 虚构流量，为了画线
         ],
       });
 
+      // --- 2. 展示数据 (Label Data) ---
+      // 作用：用于界面显示的真实文案
+      const labelData = reactive({
+        nodes: [
+          { name: '企业项目', display: '2个' },
+          { name: '资金方项目', display: '3个' },
+          { name: '新建项目', display: '5个' },
+          { name: '落地项目', display: '0个' }, // 真实数据
+          { name: '个人客户', display: '暂无' },
+          { name: '公司客户', display: '暂无' },
+        ],
+        links: [
+          { source: '企业项目', target: '新建项目', display: '2个项目' },
+          { source: '资金方项目', target: '新建项目', display: '3个项目' },
+          { source: '新建项目', target: '落地项目', display: '转化率 0%' },
+          { source: '落地项目', target: '个人客户', display: '0' },
+          { source: '落地项目', target: '公司客户', display: '0' },
+        ],
+      });
+
+      // 辅助函数：查找展示数据
+      const getDisplayVal = (type: 'node' | 'link', srcName: string, tgtName?: string) => {
+        if (type === 'node') {
+          return labelData.nodes.find((n) => n.name === srcName)?.display || '';
+        } else {
+          return (
+            labelData.links.find((l) => l.source === srcName && l.target === tgtName)?.display || ''
+          );
+        }
+      };
+
       // --- 核心计算：节点位置 ---
       const sankeyNodes = computed<Node[]>(() => {
-        const horizontalSections = 4; // 分为4列
-        // 默认宽度800，如果svgRef未加载
+        const horizontalSections = 4;
         const sectionWidth = (svgRef.value?.clientWidth || 900) / horizontalSections;
 
         const levelMap: Record<string, string[]> = {
@@ -139,43 +164,35 @@
           '3': ['个人客户', '公司客户'],
         };
 
-        // 1. 计算每一列的实际渲染高度
         const levelHeights: Record<string, number> = {};
 
+        // 1. 计算高度 (使用 rawData)
         Object.entries(levelMap).forEach(([level, nodeNames]) => {
           const columnHeight = nodeNames.reduce((sum, name) => {
             const n = rawData.nodes.find((x) => x.name === name);
             const val = n ? n.value : 0;
-            // 【核心逻辑】应用最小高度限制
             const h = Math.max(val * CONFIG.NODE_HEIGHT_RATIO, CONFIG.MIN_NODE_HEIGHT);
             return sum + h;
           }, 0);
-
-          // 列总高度 = 节点总高 + 间隙总高
           levelHeights[level] = columnHeight + (nodeNames.length - 1) * CONFIG.GAP;
         });
 
-        // 找出最高的列，用于基准对齐
         const maxLevelHeight = Math.max(...Object.values(levelHeights));
         const nodes: Node[] = [];
 
-        // 2. 生成节点坐标
+        // 2. 生成节点 (混合 geometry 和 labelData)
         Object.entries(levelMap).forEach(([level, nodeNames]) => {
-          // x坐标：按列分布，加一点左边距
           const x = sectionWidth * parseInt(level) + 50;
-
-          // y坐标：垂直居中算法
           const currentLevelHeight = levelHeights[level];
           const yOffset = (maxLevelHeight - currentLevelHeight) / 2 + CONFIG.VERTICAL_PADDING;
-
           let currentY = yOffset;
 
           nodeNames.forEach((nodeName) => {
-            const nodeData = rawData.nodes.find((n) => n.name === nodeName);
-            if (!nodeData) return;
+            const nodeGeoData = rawData.nodes.find((n) => n.name === nodeName);
+            if (!nodeGeoData) return;
 
-            // 计算高度，确保不小于最小值
-            const rawHeight = nodeData.value * CONFIG.NODE_HEIGHT_RATIO;
+            // 几何高度计算
+            const rawHeight = nodeGeoData.value * CONFIG.NODE_HEIGHT_RATIO;
             const height = Math.max(rawHeight, CONFIG.MIN_NODE_HEIGHT);
 
             nodes.push({
@@ -184,11 +201,11 @@
               y: currentY,
               width: CONFIG.NODE_WIDTH,
               height,
-              color: nodeData.color,
-              value: nodeData.value,
+              color: nodeGeoData.color,
+              // 【关键】这里使用 labelData 的值
+              value: getDisplayVal('node', nodeName),
             });
 
-            // 累加高度用于下一个节点
             currentY += height + CONFIG.GAP;
           });
         });
@@ -198,7 +215,7 @@
 
       // --- 核心计算：连线路径 ---
       const sankeyLinks = computed<Link[]>(() => {
-        // 预处理：按节点分组连接
+        // 预处理 (使用 rawData)
         const incomingLinks: Record<string, typeof rawData.links> = {};
         const outgoingLinks: Record<string, typeof rawData.links> = {};
 
@@ -209,9 +226,6 @@
           outgoingLinks[link.source].push(link);
         });
 
-        // 简单的排序逻辑，保证连线顺畅（这里假设数据顺序已经较好）
-        // ...（实际项目中可添加根据y坐标排序的逻辑）
-
         return rawData.links.map((link) => {
           const sourceNode = sankeyNodes.value.find((n) => n.name === link.source);
           const targetNode = sankeyNodes.value.find((n) => n.name === link.target);
@@ -220,47 +234,45 @@
             return {
               source: link.source,
               target: link.target,
-              value: link.value,
+              value: 0,
               path: '',
               color: '#ccc',
             };
           }
 
-          // 计算总流量用于比例分配
+          // --- 几何计算 (全部基于 rawData 的 value) ---
           const sourceTotalValue =
             outgoingLinks[link.source]?.reduce((sum, l) => sum + l.value, 0) || link.value;
           const targetTotalValue =
             incomingLinks[link.target]?.reduce((sum, l) => sum + l.value, 0) || link.value;
 
-          // 计算当前连接之前的累积值（offset）
+          // 计算 offset
           let sourceValOffset = 0;
           for (let l of outgoingLinks[link.source]) {
             if (l.target === link.target && l.value === link.value) break;
             sourceValOffset += l.value;
           }
-
           let targetValOffset = 0;
           for (let l of incomingLinks[link.target]) {
             if (l.source === link.source && l.value === link.value) break;
             targetValOffset += l.value;
           }
 
-          // 【安全除法】防止 value=0 导致 NaN
+          // 比例计算
           const sourceRatio = sourceTotalValue > 0 ? sourceNode.height / sourceTotalValue : 0;
           const targetRatio = targetTotalValue > 0 ? targetNode.height / targetTotalValue : 0;
 
-          // 计算连线在节点上的高度
+          // 连线高度 (几何厚度)
           const linkHeightSource = link.value * sourceRatio;
           const linkHeightTarget = link.value * targetRatio;
 
-          // 计算连线中心点Y坐标
+          // 连线中心点
           const sourceY = sourceNode.y + sourceValOffset * sourceRatio + linkHeightSource / 2;
           const targetY = targetNode.y + targetValOffset * targetRatio + linkHeightTarget / 2;
 
+          // 路径贝塞尔曲线
           const startX = sourceNode.x + sourceNode.width;
           const endX = targetNode.x;
-
-          // 贝塞尔曲线控制点
           const deltaX = endX - startX;
           const syTop = sourceY - linkHeightSource / 2;
           const syBottom = sourceY + linkHeightSource / 2;
@@ -275,7 +287,7 @@
           Z
         `;
 
-          // 颜色策略：默认跟随源节点，"落地项目"特殊处理跟随目标节点
+          // 颜色处理
           let linkColor = sourceNode.color;
           if (link.source === '落地项目') {
             const tNode = sankeyNodes.value.find((n) => n.name === link.target);
@@ -285,7 +297,8 @@
           return {
             source: link.source,
             target: link.target,
-            value: link.value,
+            // 【关键】这里使用 labelData 的值
+            value: getDisplayVal('link', link.source, link.target),
             path,
             color: linkColor,
           };
@@ -294,7 +307,7 @@
 
       // --- 交互与工具 ---
       const showNodeTooltip = (event: MouseEvent, node: Node) => {
-        tooltipText.value = `<strong>${node.name}</strong><br />值: ${node.value}`;
+        tooltipText.value = `<strong>${node.name}</strong><br />当前值: ${node.value}`;
         updateTooltipPos(event);
         tooltipVisible.value = true;
       };
@@ -319,7 +332,7 @@
       });
 
       onMounted(() => {
-        // 触发响应式更新
+        // 触发一次响应式
       });
 
       return {
@@ -368,7 +381,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     position: relative;
     width: 100%;
-    max-width: 900px; /* 匹配设计稿宽度 */
+    max-width: 900px;
     overflow: hidden;
   }
 
@@ -380,23 +393,28 @@
     opacity: 0.8;
   }
 
+  .sankey-link {
+    cursor: pointer;
+    /* 默认透明度在template中设置了 */
+  }
   .sankey-link:hover {
-    fill-opacity: 0.8 !important; /* hover高亮 */
+    fill-opacity: 0.8 !important;
   }
 
   .tooltip {
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(0, 0, 0, 0.8);
     color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
     pointer-events: none;
     z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    line-height: 1.5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    line-height: 1.6;
     transition:
       top 0.1s,
       left 0.1s;
+    white-space: nowrap;
   }
 </style>
