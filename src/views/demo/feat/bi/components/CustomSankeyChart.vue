@@ -1,15 +1,20 @@
 <template>
   <div class="sankey-complete-demo">
     <h1>项目资金流向桑基图</h1>
-    <p class="description"> 特性：数据分离模式 | 图形由几何数据驱动 | 文案由展示数据驱动 </p>
-    <div class="sankey-container">
+    <p class="description">
+      特性：数据分离模式 | 交互状态: {{ config.INTERACTIVE ? '开启' : '关闭' }}
+    </p>
+
+    <button @click="toggleInteraction" class="toggle-btn"> 切换交互模式 </button>
+
+    <div class="sankey-container" :class="{ 'interactive-disabled': !config.INTERACTIVE }">
       <svg ref="svgRef" width="100%" height="600" @mouseleave="hideTooltip">
         <g v-for="(link, index) in sankeyLinks" :key="`link-${index}`">
           <path
             :d="link.path"
             :fill="link.color"
             :fill-opacity="0.4"
-            @mouseenter="showLinkTooltip($event, link)"
+            @mouseenter="handleLinkHover($event, link)"
             style="transition: fill-opacity 0.3s"
             class="sankey-link"
           />
@@ -24,7 +29,7 @@
             :fill="node.color"
             rx="2"
             ry="2"
-            @mouseenter="showNodeTooltip($event, node)"
+            @mouseenter="handleNodeHover($event, node)"
             class="sankey-node"
           />
 
@@ -69,13 +74,13 @@
     width: number;
     height: number;
     color: string;
-    value: string | number; // 修改：支持字符串显示
+    value: string | number;
   }
 
   interface Link {
     source: string;
     target: string;
-    value: string | number; // 修改：支持字符串显示
+    value: string | number;
     path: string;
     color: string;
   }
@@ -90,45 +95,43 @@
       const tooltipY = ref(0);
 
       // --- 配置项 ---
-      const CONFIG = {
+      const config = reactive({
         NODE_WIDTH: 16,
-        MIN_NODE_HEIGHT: 1, // 即使几何数据很小，也保留1px
-        NODE_HEIGHT_RATIO: 20, // 几何缩放比例
+        MIN_NODE_HEIGHT: 1,
+        NODE_HEIGHT_RATIO: 20,
+        NODE_MIN_VALUE: 0.1,
         GAP: 80,
         VERTICAL_PADDING: 60,
-      };
+        // 【新增】交互总开关
+        INTERACTIVE: false,
+      });
 
       // --- 1. 几何数据 (Raw Data) ---
-      // 作用：仅用于计算图形的高度、粗细、位置。
-      // 技巧：这里的数据都是非0的，为了让图形好看，即使业务上是0，这里也给 1 或 2 占位
       const rawData = reactive({
         nodes: [
           { name: '企业项目', color: '#5B8FF9', value: 2 },
           { name: '资金方项目', color: '#F6BD16', value: 3 },
           { name: '新建项目', color: '#00C7E6', value: 5 },
-          // 真实业务是0，但为了画出节点，这里给 2
-          { name: '落地项目', color: '#006D75', value: 2 },
-          // 真实业务是0，但为了画出节点，这里给 1
-          { name: '个人客户', color: '#52C41A', value: 1 },
-          { name: '公司客户', color: '#D9001B', value: 1 },
+          { name: '落地项目', color: '#006D75', value: 0.1 },
+          { name: '个人客户', color: '#52C41A', value: 0.1 },
+          { name: '公司客户', color: '#D9001B', value: 0.1 },
         ],
         links: [
           { source: '企业项目', target: '新建项目', value: 2 },
           { source: '资金方项目', target: '新建项目', value: 3 },
-          { source: '新建项目', target: '落地项目', value: 5 }, // 即使全部流失，也画一条线表示关系
-          { source: '落地项目', target: '个人客户', value: 1 }, // 虚构流量，为了画线
-          { source: '落地项目', target: '公司客户', value: 1 }, // 虚构流量，为了画线
+          { source: '新建项目', target: '落地项目', value: 0.1 },
+          { source: '落地项目', target: '个人客户', value: 0.1 },
+          { source: '落地项目', target: '公司客户', value: 0.1 },
         ],
       });
 
       // --- 2. 展示数据 (Label Data) ---
-      // 作用：用于界面显示的真实文案
       const labelData = reactive({
         nodes: [
           { name: '企业项目', display: '2个' },
           { name: '资金方项目', display: '3个' },
           { name: '新建项目', display: '5个' },
-          { name: '落地项目', display: '0个' }, // 真实数据
+          { name: '落地项目', display: '0个' },
           { name: '个人客户', display: '暂无' },
           { name: '公司客户', display: '暂无' },
         ],
@@ -141,7 +144,6 @@
         ],
       });
 
-      // 辅助函数：查找展示数据
       const getDisplayVal = (type: 'node' | 'link', srcName: string, tgtName?: string) => {
         if (type === 'node') {
           return labelData.nodes.find((n) => n.name === srcName)?.display || '';
@@ -166,47 +168,43 @@
 
         const levelHeights: Record<string, number> = {};
 
-        // 1. 计算高度 (使用 rawData)
         Object.entries(levelMap).forEach(([level, nodeNames]) => {
           const columnHeight = nodeNames.reduce((sum, name) => {
             const n = rawData.nodes.find((x) => x.name === name);
             const val = n ? n.value : 0;
-            const h = Math.max(val * CONFIG.NODE_HEIGHT_RATIO, CONFIG.MIN_NODE_HEIGHT);
+            const h = Math.max(val * config.NODE_HEIGHT_RATIO, config.MIN_NODE_HEIGHT);
             return sum + h;
           }, 0);
-          levelHeights[level] = columnHeight + (nodeNames.length - 1) * CONFIG.GAP;
+          levelHeights[level] = columnHeight + (nodeNames.length - 1) * config.GAP;
         });
 
         const maxLevelHeight = Math.max(...Object.values(levelHeights));
         const nodes: Node[] = [];
 
-        // 2. 生成节点 (混合 geometry 和 labelData)
         Object.entries(levelMap).forEach(([level, nodeNames]) => {
           const x = sectionWidth * parseInt(level) + 50;
           const currentLevelHeight = levelHeights[level];
-          const yOffset = (maxLevelHeight - currentLevelHeight) / 2 + CONFIG.VERTICAL_PADDING;
+          const yOffset = (maxLevelHeight - currentLevelHeight) / 2 + config.VERTICAL_PADDING;
           let currentY = yOffset;
 
           nodeNames.forEach((nodeName) => {
             const nodeGeoData = rawData.nodes.find((n) => n.name === nodeName);
             if (!nodeGeoData) return;
 
-            // 几何高度计算
-            const rawHeight = nodeGeoData.value * CONFIG.NODE_HEIGHT_RATIO;
-            const height = Math.max(rawHeight, CONFIG.MIN_NODE_HEIGHT);
+            const rawHeight = nodeGeoData.value * config.NODE_HEIGHT_RATIO;
+            const height = Math.max(rawHeight, config.MIN_NODE_HEIGHT);
 
             nodes.push({
               name: nodeName,
               x,
               y: currentY,
-              width: CONFIG.NODE_WIDTH,
+              width: config.NODE_WIDTH,
               height,
               color: nodeGeoData.color,
-              // 【关键】这里使用 labelData 的值
               value: getDisplayVal('node', nodeName),
             });
 
-            currentY += height + CONFIG.GAP;
+            currentY += height + config.GAP;
           });
         });
 
@@ -215,7 +213,6 @@
 
       // --- 核心计算：连线路径 ---
       const sankeyLinks = computed<Link[]>(() => {
-        // 预处理 (使用 rawData)
         const incomingLinks: Record<string, typeof rawData.links> = {};
         const outgoingLinks: Record<string, typeof rawData.links> = {};
 
@@ -240,13 +237,11 @@
             };
           }
 
-          // --- 几何计算 (全部基于 rawData 的 value) ---
           const sourceTotalValue =
             outgoingLinks[link.source]?.reduce((sum, l) => sum + l.value, 0) || link.value;
           const targetTotalValue =
             incomingLinks[link.target]?.reduce((sum, l) => sum + l.value, 0) || link.value;
 
-          // 计算 offset
           let sourceValOffset = 0;
           for (let l of outgoingLinks[link.source]) {
             if (l.target === link.target && l.value === link.value) break;
@@ -258,19 +253,15 @@
             targetValOffset += l.value;
           }
 
-          // 比例计算
           const sourceRatio = sourceTotalValue > 0 ? sourceNode.height / sourceTotalValue : 0;
           const targetRatio = targetTotalValue > 0 ? targetNode.height / targetTotalValue : 0;
 
-          // 连线高度 (几何厚度)
           const linkHeightSource = link.value * sourceRatio;
           const linkHeightTarget = link.value * targetRatio;
 
-          // 连线中心点
           const sourceY = sourceNode.y + sourceValOffset * sourceRatio + linkHeightSource / 2;
           const targetY = targetNode.y + targetValOffset * targetRatio + linkHeightTarget / 2;
 
-          // 路径贝塞尔曲线
           const startX = sourceNode.x + sourceNode.width;
           const endX = targetNode.x;
           const deltaX = endX - startX;
@@ -287,7 +278,6 @@
           Z
         `;
 
-          // 颜色处理
           let linkColor = sourceNode.color;
           if (link.source === '落地项目') {
             const tNode = sankeyNodes.value.find((n) => n.name === link.target);
@@ -297,7 +287,6 @@
           return {
             source: link.source,
             target: link.target,
-            // 【关键】这里使用 labelData 的值
             value: getDisplayVal('link', link.source, link.target),
             path,
             color: linkColor,
@@ -305,14 +294,25 @@
         });
       });
 
-      // --- 交互与工具 ---
-      const showNodeTooltip = (event: MouseEvent, node: Node) => {
+      // --- 交互控制 ---
+
+      // 切换开关
+      const toggleInteraction = () => {
+        config.INTERACTIVE = !config.INTERACTIVE;
+        if (!config.INTERACTIVE) {
+          hideTooltip();
+        }
+      };
+
+      const handleNodeHover = (event: MouseEvent, node: Node) => {
+        if (!config.INTERACTIVE) return; // 逻辑层拦截
         tooltipText.value = `<strong>${node.name}</strong><br />当前值: ${node.value}`;
         updateTooltipPos(event);
         tooltipVisible.value = true;
       };
 
-      const showLinkTooltip = (event: MouseEvent, link: Link) => {
+      const handleLinkHover = (event: MouseEvent, link: Link) => {
+        if (!config.INTERACTIVE) return; // 逻辑层拦截
         tooltipText.value = `${link.source} → ${link.target}<br />流量: ${link.value}`;
         updateTooltipPos(event);
         tooltipVisible.value = true;
@@ -332,19 +332,21 @@
       });
 
       onMounted(() => {
-        // 触发一次响应式
+        // Init
       });
 
       return {
         svgRef,
+        config, // 暴露配置
         sankeyNodes,
         sankeyLinks,
         tooltipVisible,
         tooltipText,
         tooltipStyle,
-        showNodeTooltip,
-        showLinkTooltip,
+        handleNodeHover, // 改名后的 handler
+        handleLinkHover, // 改名后的 handler
         hideTooltip,
+        toggleInteraction,
       };
     },
   });
@@ -374,6 +376,19 @@
     margin-bottom: 20px;
   }
 
+  .toggle-btn {
+    margin-bottom: 15px;
+    padding: 6px 12px;
+    background: #5b8ff9;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .toggle-btn:hover {
+    background: #4075e0;
+  }
+
   .sankey-container {
     border: 1px solid #e8e8e8;
     border-radius: 8px;
@@ -385,21 +400,32 @@
     overflow: hidden;
   }
 
+  /* --- 关键 CSS 修改 --- */
+
+  /* 1. 默认状态：有鼠标手势 */
   .sankey-node {
     cursor: pointer;
     transition: opacity 0.2s;
   }
-  .sankey-node:hover {
-    opacity: 0.8;
-  }
-
   .sankey-link {
     cursor: pointer;
-    /* 默认透明度在template中设置了 */
+    /* transition 在行内样式里定义了 */
   }
-  .sankey-link:hover {
+
+  /* 2. 默认状态：Hover效果生效 */
+  .sankey-container:not(.interactive-disabled) .sankey-node:hover {
+    opacity: 0.8;
+  }
+  .sankey-container:not(.interactive-disabled) .sankey-link:hover {
     fill-opacity: 0.8 !important;
   }
+
+  /* 3. 禁用状态：禁用所有鼠标事件 */
+  .interactive-disabled svg {
+    pointer-events: none; /* 穿透点击，不触发任何鼠标事件 */
+  }
+
+  /* --- 结束关键 CSS 修改 --- */
 
   .tooltip {
     position: absolute;
