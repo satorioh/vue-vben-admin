@@ -261,6 +261,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'custom-sankey',
+      name: 'CustomSankeyDemo',
+      component: () => import('@/views/demo/feat/sankey/index.vue'),
+      meta: {
+        title: '自定义桑基图',
+      },
+    },
+    {
       path: '/error-log',
       name: 'ErrorLog',
       component: () => import('@/views/sys/error-log/index.vue'),
