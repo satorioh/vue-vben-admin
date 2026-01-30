@@ -1,65 +1,56 @@
 <template>
-  <div class="sankey-complete-demo">
-    <h1>项目资金流向桑基图</h1>
-    <p class="description">
-      特性：数据分离模式 | 交互状态: {{ config.INTERACTIVE ? '开启' : '关闭' }}
-    </p>
+  <div class="sankey-container" :class="{ 'interactive-disabled': !config.INTERACTIVE }">
+    <svg ref="svgRef" width="100%" height="600" @mouseleave="hideTooltip">
+      <g v-for="(link, index) in sankeyLinks" :key="`link-${index}`">
+        <path
+          :d="link.path"
+          :fill="link.color"
+          :fill-opacity="0.4"
+          @mouseenter="handleLinkHover($event, link)"
+          style="transition: fill-opacity 0.3s"
+          class="sankey-link"
+        />
+      </g>
 
-    <button @click="toggleInteraction" class="toggle-btn"> 切换交互模式 </button>
+      <g v-for="(node, index) in sankeyNodes" :key="`node-${index}`">
+        <rect
+          :x="node.x"
+          :y="node.y"
+          :width="node.width"
+          :height="node.height"
+          :fill="node.color"
+          rx="2"
+          ry="2"
+          @mouseenter="handleNodeHover($event, node)"
+          class="sankey-node"
+        />
 
-    <div class="sankey-container" :class="{ 'interactive-disabled': !config.INTERACTIVE }">
-      <svg ref="svgRef" width="100%" height="600" @mouseleave="hideTooltip">
-        <g v-for="(link, index) in sankeyLinks" :key="`link-${index}`">
-          <path
-            :d="link.path"
-            :fill="link.color"
-            :fill-opacity="0.4"
-            @mouseenter="handleLinkHover($event, link)"
-            style="transition: fill-opacity 0.3s"
-            class="sankey-link"
-          />
-        </g>
+        <text
+          :x="node.x + node.width / 2"
+          :y="node.y - 24"
+          text-anchor="middle"
+          font-size="16"
+          font-weight="bold"
+          :fill="node.color"
+          style="pointer-events: none"
+        >
+          {{ node.name }}
+        </text>
+        <text
+          :x="node.x + node.width / 2"
+          :y="node.y - 6"
+          text-anchor="middle"
+          font-size="14"
+          fill="#999"
+          style="pointer-events: none"
+        >
+          {{ node.value }}
+        </text>
+      </g>
+    </svg>
 
-        <g v-for="(node, index) in sankeyNodes" :key="`node-${index}`">
-          <rect
-            :x="node.x"
-            :y="node.y"
-            :width="node.width"
-            :height="node.height"
-            :fill="node.color"
-            rx="2"
-            ry="2"
-            @mouseenter="handleNodeHover($event, node)"
-            class="sankey-node"
-          />
-
-          <text
-            :x="node.x + node.width / 2"
-            :y="node.y - 24"
-            text-anchor="middle"
-            font-size="16"
-            font-weight="bold"
-            :fill="node.color"
-            style="pointer-events: none"
-          >
-            {{ node.name }}
-          </text>
-          <text
-            :x="node.x + node.width / 2"
-            :y="node.y - 6"
-            text-anchor="middle"
-            font-size="14"
-            fill="#999"
-            style="pointer-events: none"
-          >
-            {{ node.value }}
-          </text>
-        </g>
-      </svg>
-
-      <div v-if="tooltipVisible" class="tooltip" :style="tooltipStyle">
-        <span v-html="tooltipText"></span>
-      </div>
+    <div v-if="tooltipVisible" class="tooltip" :style="tooltipStyle">
+      <span v-html="tooltipText"></span>
     </div>
   </div>
 </template>
@@ -353,42 +344,6 @@
 </script>
 
 <style scoped>
-  .sankey-complete-demo {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background-color: #f9f9f9;
-    min-height: 100vh;
-  }
-
-  h1 {
-    color: #333;
-    margin-bottom: 5px;
-  }
-
-  .description {
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 20px;
-  }
-
-  .toggle-btn {
-    margin-bottom: 15px;
-    padding: 6px 12px;
-    background: #5b8ff9;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .toggle-btn:hover {
-    background: #4075e0;
-  }
-
   .sankey-container {
     border: 1px solid #e8e8e8;
     border-radius: 8px;
