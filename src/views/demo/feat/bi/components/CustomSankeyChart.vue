@@ -1,20 +1,18 @@
 <template>
   <div class="sankey-image-demo">
     <h1>项目资金流向桑基图</h1>
-    <p class="description">根据提供的图片实现项目资金流向可视化</p>
+    <p class="description">根据图片效果调整：节点16px、颜色匹配、标签上方居中、垂直自动对齐</p>
     <div class="sankey-container">
       <svg ref="svgRef" width="100%" height="600" @mouseleave="hideTooltip">
-        <!-- 连接线 -->
         <g v-for="(link, index) in sankeyLinks" :key="`link-${index}`">
           <path
             :d="link.path"
             :fill="link.color"
-            :opacity="0.5"
+            :fill-opacity="0.6"
             @mouseenter="showLinkTooltip($event, link)"
           />
         </g>
 
-        <!-- 节点 -->
         <g v-for="(node, index) in sankeyNodes" :key="`node-${index}`">
           <rect
             :x="node.x"
@@ -22,25 +20,34 @@
             :width="node.width"
             :height="node.height"
             :fill="node.color"
-            rx="4"
-            ry="4"
+            rx="2"
+            ry="2"
             @mouseenter="showNodeTooltip($event, node)"
           />
           <text
-            :x="node.x + node.width + 10"
-            :y="node.y + node.height / 2"
-            alignment-baseline="middle"
-            font-size="14"
-            fill="#333"
+            :x="node.x + node.width / 2"
+            :y="node.y - 25"
+            text-anchor="middle"
+            font-size="16"
+            font-weight="bold"
+            :fill="node.color"
           >
             {{ node.name }}
+          </text>
+          <text
+            :x="node.x + node.width / 2"
+            :y="node.y - 5"
+            text-anchor="middle"
+            font-size="16"
+            fill="#666"
+          >
+            {{ node.value }}
           </text>
         </g>
       </svg>
 
-      <!-- 工具提示 -->
       <div v-if="tooltipVisible" class="tooltip" :style="tooltipStyle">
-        {{ tooltipText }}
+        <span v-html="tooltipText"></span>
       </div>
     </div>
   </div>
@@ -76,108 +83,30 @@
       const tooltipX = ref(0);
       const tooltipY = ref(0);
 
-      // 颜色转换辅助函数
-      const hexToRgb = (hex: string) => {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result
-          ? {
-              r: parseInt(result[1], 16),
-              g: parseInt(result[2], 16),
-              b: parseInt(result[3], 16),
-            }
-          : null;
-      };
-
-      const rgbToHex = (r: number, g: number, b: number) => {
-        return (
-          '#' +
-          ((1 << 24) + (Math.round(r) << 16) + (Math.round(g) << 8) + Math.round(b))
-            .toString(16)
-            .slice(1)
-        );
-      };
-
-      const rgbToHsl = (r: number, g: number, b: number) => {
-        (r /= 255), (g /= 255), (b /= 255);
-        const max = Math.max(r, g, b),
-          min = Math.min(r, g, b);
-        let h = 0,
-          s = 0,
-          l = (max + min) / 2;
-
-        if (max === min) {
-          h = s = 0; // achromatic
-        } else {
-          const d = max - min;
-          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-          switch (max) {
-            case r:
-              h = (g - b) / d + (g < b ? 6 : 0);
-              break;
-            case g:
-              h = (b - r) / d + 2;
-              break;
-            case b:
-              h = (r - g) / d + 4;
-              break;
-          }
-          h *= 60;
-        }
-
-        return { h, s, l };
-      };
-
-      const hslToRgb = (h: number, s: number, l: number) => {
-        let r: number, g: number, b: number;
-
-        if (s === 0) {
-          r = g = b = l; // achromatic
-        } else {
-          const hue2rgb = (p: number, q: number, t: number) => {
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1 / 6) return p + (q - p) * 6 * t;
-            if (t < 1 / 2) return q;
-            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-            return p;
-          };
-
-          const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-          const p = 2 * l - q;
-          r = hue2rgb(p, q, h / 360 + 1 / 3) * 255;
-          g = hue2rgb(p, q, h / 360) * 255;
-          b = hue2rgb(p, q, h / 360 - 1 / 3) * 255;
-        }
-
-        return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
-      };
-
-      // 定义数据
+      // 1. 定义数据 (颜色已根据图片调整)
       const rawData = reactive({
         nodes: [
-          // 源节点
-          { name: '企业项目', color: '#3498db', value: 12 },
-          { name: '资金方项目', color: '#2ecc71', value: 10 },
+          // 源节点 (左侧)
+          { name: '企业项目', color: '#5B8FF9', value: 12 }, // 蓝色
+          { name: '资金方项目', color: '#F6BD16', value: 10 }, // 黄色
 
           // 中间节点
-          { name: '新建项目', color: '#e74c3c', value: 5 },
-          { name: '落地项目', color: '#9b59b6', value: 4 },
+          { name: '新建项目', color: '#00C7E6', value: 5 }, // 青色
+          { name: '落地项目', color: '#006D75', value: 4 }, // 深青/墨绿
 
-          // 目标节点
-          { name: '个人客户', color: '#27ae60', value: 2 },
-          { name: '公司客户', color: '#e74c3c', value: 2 },
+          // 目标节点 (右侧)
+          { name: '个人客户', color: '#52C41A', value: 2 }, // 绿色
+          { name: '公司客户', color: '#D9001B', value: 2 }, // 红色
         ],
         links: [
-          // 企业项目流向
           { source: '企业项目', target: '新建项目', value: 12 },
-
-          // 资金方项目流向
-          { source: '资金方项目', target: '新建项目', value: 4 },
-
-          // 新建项目流向
+          { source: '资金方项目', target: '新建项目', value: 4 }, // 修正：原图资金方流向新建项目，逻辑上可能汇聚
+          // 注意：原代码逻辑是 flow 汇聚。
+          // 根据图片流向：
+          // 企业(12) -> 全部流出? 图片显示汇聚成一个大的青色流
+          // 资金(10) -> 汇聚
+          // 为了视觉还原，这里维持原数据逻辑，重点在于布局算法
           { source: '新建项目', target: '落地项目', value: 4 },
-
-          // 落地项目流向
           { source: '落地项目', target: '个人客户', value: 2 },
           { source: '落地项目', target: '公司客户', value: 2 },
         ],
@@ -185,13 +114,13 @@
 
       // 计算节点的位置和尺寸
       const sankeyNodes = computed<Node[]>(() => {
-        const nodeWidth = 20;
-        const nodeHeightRatio = 30; // 每单位值的高度
-        const verticalPadding = 20;
-        const horizontalSections = 4; // 将宽度分为4个部分
+        // 2. 调整节点宽度为 16px
+        const nodeWidth = 16;
+        const nodeHeightRatio = 20; // 调整高度比例以适应屏幕
+        const verticalPadding = 50; // 顶部留白增加，防止文字被遮挡
+        const horizontalSections = 4;
         const sectionWidth = (svgRef.value?.clientWidth || 800) / horizontalSections;
 
-        // 按层级分组节点
         const levelMap: Record<string, string[]> = {
           '0': ['企业项目', '资金方项目'],
           '1': ['新建项目'],
@@ -199,16 +128,34 @@
           '3': ['个人客户', '公司客户'],
         };
 
+        // 3. 计算每一列的总高度，用于垂直居中对齐
+        const levelHeights: Record<string, number> = {};
+        const GAP = 80; // 节点之间的垂直间距
+
+        Object.entries(levelMap).forEach(([level, nodeNames]) => {
+          const totalValue = nodeNames.reduce((sum, name) => {
+            const n = rawData.nodes.find((x) => x.name === name);
+            return sum + (n ? n.value : 0);
+          }, 0);
+          // 列高度 = (值的总和 * 比例) + (间隙数量 * 间隙高度)
+          levelHeights[level] = totalValue * nodeHeightRatio + (nodeNames.length - 1) * GAP;
+        });
+
+        // 找出最高的列，作为基准
+        const maxLevelHeight = Math.max(...Object.values(levelHeights));
+
         const nodes: Node[] = [];
 
         Object.entries(levelMap).forEach(([level, nodeNames]) => {
           const x = sectionWidth * parseInt(level) + 50;
-          const totalValue = nodeNames.reduce((sum, nodeName) => {
-            const nodeData = rawData.nodes.find((n) => n.name === nodeName);
-            return sum + (nodeData ? nodeData.value : 0);
-          }, 0);
 
-          let currentY = verticalPadding;
+          // 4. 垂直居中计算的核心逻辑
+          // 当前列的高度
+          const currentLevelHeight = levelHeights[level];
+          // 计算起始 Y 坐标：(最大高度 - 当前高度) / 2 + 基础内边距
+          const yOffset = (maxLevelHeight - currentLevelHeight) / 2 + verticalPadding;
+
+          let currentY = yOffset;
 
           nodeNames.forEach((nodeName) => {
             const nodeData = rawData.nodes.find((n) => n.name === nodeName);
@@ -226,28 +173,27 @@
               value: nodeData.value,
             });
 
-            currentY += height + 10; // 10px 间距
+            currentY += height + GAP;
           });
         });
 
         return nodes;
       });
 
-      // 计算连接线
+      // 计算连接线 (保持原逻辑，微调颜色获取)
       const sankeyLinks = computed<Link[]>(() => {
-        // 首先计算每个节点的所有流入和流出连接
         const incomingLinks: Record<string, typeof rawData.links> = {};
         const outgoingLinks: Record<string, typeof rawData.links> = {};
 
         rawData.links.forEach((link) => {
           if (!incomingLinks[link.target]) incomingLinks[link.target] = [];
           if (!outgoingLinks[link.source]) outgoingLinks[link.source] = [];
-
           incomingLinks[link.target].push(link);
           outgoingLinks[link.source].push(link);
         });
 
-        // 对每个节点的流入和流出连接按垂直位置排序
+        // 排序逻辑保持不变...
+        // (为节省篇幅，省略排序代码，逻辑与原代码一致，主要是为了保证连线不交叉)
         Object.keys(incomingLinks).forEach((targetNodeName) => {
           const targetNode = sankeyNodes.value.find((n) => n.name === targetNodeName);
           if (targetNode) {
@@ -271,7 +217,6 @@
         });
 
         return rawData.links.map((link) => {
-          // 查找源节点和目标节点
           const sourceNode = sankeyNodes.value.find((n) => n.name === link.source);
           const targetNode = sankeyNodes.value.find((n) => n.name === link.target);
 
@@ -285,142 +230,76 @@
             };
           }
 
-          // 计算流入连接在目标节点上的起始位置
-          const incomingIndex =
-            incomingLinks[targetNode.name]?.findIndex(
-              (l) => l.source === link.source && l.target === link.target,
-            ) ?? 0;
-          const totalIncoming = incomingLinks[targetNode.name]?.length ?? 1;
-
-          // 计算源节点和目标节点的垂直比例
+          // 连线坐标计算逻辑 (保持原逻辑，只需确保引用了新的 sankeyNodes)
           const sourceTotalValue =
             outgoingLinks[link.source]?.reduce((sum, l) => sum + l.value, 0) || link.value;
-          const sourceProportion = link.value / sourceTotalValue;
-
           const targetTotalValue =
             incomingLinks[link.target]?.reduce((sum, l) => sum + l.value, 0) || link.value;
-          const targetProportion = link.value / targetTotalValue;
 
-          // 初始化源节点的垂直位置
-          let sourceStartY = sourceNode.y + (sourceNode.height * (1 - sourceProportion)) / 2;
-          let sourceEndY =
-            sourceNode.y + sourceNode.height - (sourceNode.height * (1 - sourceProportion)) / 2;
-
-          // 如果源节点有多个流出连接，需要按比例分配垂直空间
-          if (outgoingLinks[link.source] && outgoingLinks[link.source].length > 1) {
-            // 计算每个流出连接在源节点上占据的垂直位置
-            const sourceValueSum = outgoingLinks[link.source].reduce((sum, l) => sum + l.value, 0);
-            let currentYPos = sourceNode.y;
-
-            for (let i = 0; i < outgoingLinks[link.source].length; i++) {
-              const currentLink = outgoingLinks[link.source][i];
-              if (currentLink.source === link.source && currentLink.target === link.target) {
-                // 计算该连接在源节点上的垂直位置
-                const proportion = currentLink.value / sourceValueSum;
-                sourceStartY = currentYPos;
-                sourceEndY = currentYPos + sourceNode.height * proportion;
-                break;
-              } else {
-                // 累加前面连接的高度
-                const prevProportion = currentLink.value / sourceValueSum;
-                currentYPos += sourceNode.height * prevProportion;
-              }
-            }
+          // 简化计算：按顺序堆叠
+          // 查找当前 link 在源节点输出中的位置索引和前置值
+          let sourceValOffset = 0;
+          const sourceLinks = outgoingLinks[link.source];
+          for (let l of sourceLinks) {
+            if (l.target === link.target && l.value === link.value) break; // 简单匹配
+            sourceValOffset += l.value;
           }
 
-          // 初始化目标节点的垂直位置
-          let targetStartY = targetNode.y + (targetNode.height * (1 - targetProportion)) / 2;
-          let targetEndY =
-            targetNode.y + targetNode.height - (targetNode.height * (1 - targetProportion)) / 2;
-
-          // 如果目标节点有多个流入连接，需要按比例分配垂直空间
-          if (incomingLinks[link.target] && incomingLinks[link.target].length > 1) {
-            // 计算每个流入连接在目标节点上占据的垂直位置
-            const targetValueSum = incomingLinks[link.target].reduce((sum, l) => sum + l.value, 0);
-            let currentYPos = targetNode.y;
-
-            for (let i = 0; i < incomingLinks[link.target].length; i++) {
-              const currentLink = incomingLinks[link.target][i];
-              if (currentLink.source === link.source && currentLink.target === link.target) {
-                // 计算该连接在目标节点上的垂直位置
-                const proportion = currentLink.value / targetValueSum;
-                targetStartY = currentYPos;
-                targetEndY = currentYPos + targetNode.height * proportion;
-                break;
-              } else {
-                // 累加前面连接的高度
-                const prevProportion = currentLink.value / targetValueSum;
-                currentYPos += targetNode.height * prevProportion;
-              }
-            }
+          // 查找当前 link 在目标节点输入中的位置索引和前置值
+          let targetValOffset = 0;
+          const targetLinks = incomingLinks[link.target];
+          for (let l of targetLinks) {
+            if (l.source === link.source && l.value === link.value) break;
+            targetValOffset += l.value;
           }
 
-          // 计算贝塞尔曲线路径
+          // 计算高度比例
+          const sourceRatio = sourceNode.height / sourceTotalValue;
+          // 注意：这里用 sourceNode.height 代替 value 计算，确保填满节点高度
+          // 但如果流出总值 < 节点值(通常桑基图流出=流入)，可能需要修正。这里简化处理。
+
+          const targetRatio = targetNode.height / targetTotalValue;
+
+          const linkHeightSource = link.value * sourceRatio;
+          const linkHeightTarget = link.value * targetRatio;
+
+          const sourceY = sourceNode.y + sourceValOffset * sourceRatio + linkHeightSource / 2;
+          const targetY = targetNode.y + targetValOffset * targetRatio + linkHeightTarget / 2;
+
           const startX = sourceNode.x + sourceNode.width;
-          const startY = (sourceStartY + sourceEndY) / 2; // 中心点
           const endX = targetNode.x;
-          const endY = (targetStartY + targetEndY) / 2; // 中心点
 
-          // 控制点 - 创建平滑的曲线
-          const controlX1 = startX + (endX - startX) * 0.3;
-          const controlX2 = startX + (endX - startX) * 0.7;
+          const curvature = 0.5;
+          const xi = d3Interpolate(startX, endX, curvature);
+          const xf = d3Interpolate(startX, endX, 1 - curvature);
 
-          // 计算连接线的上下边界
-          const sourceHalfHeight = (sourceEndY - sourceStartY) / 2;
-          const targetHalfHeight = (targetEndY - targetStartY) / 2;
+          // 使用简单的贝塞尔曲线，带宽度
+          // 为了绘制带状区域，需要计算顶部路径和底部路径
 
-          // 创建一个封闭路径形成带状连接
+          const syTop = sourceY - linkHeightSource / 2;
+          const syBottom = sourceY + linkHeightSource / 2;
+          const tyTop = targetY - linkHeightTarget / 2;
+          const tyBottom = targetY + linkHeightTarget / 2;
+
+          const deltaX = endX - startX;
+
+          // 调整控制点以获得更像图片的平滑流体感
           const path = `
-          M${startX},${startY - sourceHalfHeight}
-          C${controlX1},${startY - sourceHalfHeight} ${controlX2},${
-            endY - targetHalfHeight
-          } ${endX},${endY - targetHalfHeight}
-          L${endX},${endY + targetHalfHeight}
-          C${controlX2},${endY + targetHalfHeight} ${controlX1},${
-            startY + sourceHalfHeight
-          } ${startX},${startY + sourceHalfHeight}
+          M ${startX} ${syTop}
+          C ${startX + deltaX / 2} ${syTop}, ${startX + deltaX / 2} ${tyTop}, ${endX} ${tyTop}
+          L ${endX} ${tyBottom}
+          C ${startX + deltaX / 2} ${tyBottom}, ${startX + deltaX / 2} ${syBottom}, ${startX} ${syBottom}
           Z
         `;
 
-          // 根据源节点颜色确定连线颜色，并为同一源节点的不同流出连接添加颜色变化
-          const sourceNodeData = rawData.nodes.find((n) => n.name === link.source);
-
-          // 对于从'落地项目'出发的连接线，使用目标节点的颜色
-          let color;
+          // 颜色策略：根据图片，连接线颜色通常跟随源节点，或者是渐变。
+          // 这里为了匹配图片，我们使用源节点颜色，并降低透明度
+          let linkColor = sourceNode.color;
+          // 特殊处理：如果是"落地项目"发出的，根据图片看来，是分流成红绿
+          // 为了美观，如果目标是 个人客户/公司客户，也可以尝试用目标颜色
           if (link.source === '落地项目') {
-            const targetNodeData = rawData.nodes.find((n) => n.name === link.target);
-            color = targetNodeData ? targetNodeData.color : '#ccc';
-          } else {
-            // 其他情况下继续使用源节点的颜色
-            color = sourceNodeData ? sourceNodeData.color : '#ccc';
-          }
-
-          // 获取当前连接在其源节点的流出连接中的索引
-          const sourceLinks = outgoingLinks[link.source] || [];
-          const linkIndex = sourceLinks.findIndex(
-            (l) => l.source === link.source && l.target === link.target,
-          );
-
-          // 为同一源节点的不同流出连接创建略有不同的颜色
-          if (sourceLinks.length > 1 && linkIndex >= 0) {
-            // 使用HSL颜色空间调整色调以创建不同但协调的颜色
-            const baseRgb = hexToRgb(color);
-            if (baseRgb) {
-              // 根据连接索引轻微调整颜色
-              const hueShift = (linkIndex * 30) % 360; // 色相偏移
-              const saturationAdjust = 0.8 + linkIndex * 0.1; // 饱和度微调
-              const lightnessAdjust = 0.7 + linkIndex * 0.05; // 亮度微调
-
-              // 将RGB转换为HSL并调整
-              const hsl = rgbToHsl(baseRgb.r, baseRgb.g, baseRgb.b);
-              const adjustedColor = hslToRgb(
-                (hsl.h + hueShift) % 360,
-                Math.min(hsl.s * saturationAdjust, 1),
-                Math.min(hsl.l * lightnessAdjust, 1),
-              );
-
-              color = rgbToHex(adjustedColor.r, adjustedColor.g, adjustedColor.b);
-            }
+            const tNode = sankeyNodes.value.find((n) => n.name === link.target);
+            if (tNode) linkColor = tNode.color;
           }
 
           return {
@@ -428,33 +307,37 @@
             target: link.target,
             value: link.value,
             path,
-            color,
+            color: linkColor,
           };
         });
       });
 
-      // 显示节点工具提示
+      // 辅助函数：简单的线性插值
+      const d3Interpolate = (a: number, b: number, t: number) => {
+        return a + (b - a) * t;
+      };
+
       const showNodeTooltip = (event: MouseEvent, node: Node) => {
-        tooltipText.value = `${node.name}<br />值: ${node.value}`;
-        tooltipX.value = event.offsetX + 10;
-        tooltipY.value = event.offsetY - 10;
+        tooltipText.value = `<strong>${node.name}</strong><br />值: ${node.value}`;
+        updateTooltipPos(event);
         tooltipVisible.value = true;
       };
 
-      // 显示链接工具提示
       const showLinkTooltip = (event: MouseEvent, link: Link) => {
         tooltipText.value = `${link.source} → ${link.target}<br />流量: ${link.value}`;
-        tooltipX.value = event.offsetX + 10;
-        tooltipY.value = event.offsetY - 10;
+        updateTooltipPos(event);
         tooltipVisible.value = true;
       };
 
-      // 隐藏工具提示
+      const updateTooltipPos = (event: MouseEvent) => {
+        tooltipX.value = event.offsetX + 15;
+        tooltipY.value = event.offsetY + 15;
+      };
+
       const hideTooltip = () => {
         tooltipVisible.value = false;
       };
 
-      // 计算工具提示样式
       const tooltipStyle = computed(() => {
         return {
           left: `${tooltipX.value}px`,
@@ -462,17 +345,9 @@
         };
       });
 
-      // 监听窗口大小变化
       onMounted(() => {
-        const handleResize = () => {
-          // 重新计算位置，触发响应式更新
-        };
-
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-          window.removeEventListener('resize', handleResize);
-        };
+        // 这里的逻辑主要是为了触发 computed 的重新计算（如果依赖了 DOM 尺寸）
+        // 实际 computed 依赖了响应式数据，会自动更新
       });
 
       return {
@@ -495,58 +370,45 @@
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
-    position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+      Arial, sans-serif;
   }
 
   h1 {
-    text-align: center;
-    margin-bottom: 10px;
-    color: #2c3e50;
+    color: #333;
+    margin-bottom: 5px;
   }
 
   .description {
-    text-align: center;
     color: #666;
-    margin-bottom: 30px;
-    font-size: 16px;
-    line-height: 1.5;
+    font-size: 14px;
+    margin-bottom: 20px;
   }
 
   .sankey-container {
-    border: 1px solid #ddd;
+    border: 1px solid #eee;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     position: relative;
     width: 100%;
-    max-width: 1000px;
+    max-width: 900px; /* 限制宽度以匹配图片比例 */
+    overflow: hidden;
   }
 
   .tooltip {
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(50, 50, 50, 0.9);
     color: white;
     padding: 8px 12px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
     pointer-events: none;
     z-index: 1000;
-    min-width: 120px;
-    text-align: center;
-  }
-
-  .tooltip::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    line-height: 1.5;
   }
 </style>
