@@ -29,7 +29,8 @@
                 <el-divider direction="vertical" border-style="dashed" class="pie-divider" />
                 <div class="project-flow">
                   <div class="area-title">项目流转</div>
-                  <ProjectSankey />
+                  <!--                  <ProjectSankey />-->
+                  <CustomSankeyChart />
                 </div>
               </div>
             </div>
@@ -60,6 +61,7 @@
   import FinanceChart from '@/views/demo/feat/bi/components/FinanceChart.vue';
   import EmployeePieChart from '@/views/demo/feat/bi/components/EmployeePieChart.vue';
   import ProjectSankey from '@/views/demo/feat/bi/components/ProjectSankeyChart.vue';
+  import CustomSankeyChart from '@/views/demo/feat/bi/components/CustomSankeyChart.vue';
   import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
 
   defineOptions({
