@@ -337,9 +337,15 @@
   }
 
   /* 动画 */
-  .expand-from-tr-enter-active,
-  .expand-from-tr-leave-active {
+  /* 修改：将 enter 和 leave 分开定义，enter 保持 0.5s */
+  .expand-from-tr-enter-active {
     transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform-origin: top right;
+  }
+
+  /* 修改：leave (收起) 设置为 2s */
+  .expand-from-tr-leave-active {
+    transition: all 2s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform-origin: top right;
   }
 
