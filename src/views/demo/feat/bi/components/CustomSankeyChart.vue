@@ -96,49 +96,49 @@
   });
 
   // --- 1. 几何数据 (Raw Data) ---
-  const rawData = reactive({
+  const rawData = ref({
     nodes: [
-      { name: '企业项目', color: '#5680F5', value: 2 || config.NODE_MIN_VALUE, display: 2 },
-      { name: '资金方项目', color: '#F2BE05', value: 3 || config.NODE_MIN_VALUE, display: 3 },
-      { name: '新建项目', color: '#15C0E6', value: 5 || config.NODE_MIN_VALUE, display: 5 },
+      { name: '企业项目', color: '#5680F5', value: 0, display: 0 },
+      { name: '资金方项目', color: '#F2BE05', value: 0, display: 0 },
+      { name: '新建项目', color: '#15C0E6', value: 0, display: 0 },
       {
         name: '落地项目',
         color: '#007D99',
-        value: 0 || config.NODE_MIN_VALUE,
+        value: 0,
         display: 0,
       },
-      { name: '个人客户', color: '#31A12B', value: 0 || config.NODE_MIN_VALUE, display: 0 },
-      { name: '公司客户', color: '#C70612', value: 0 || config.NODE_MIN_VALUE, display: 0 },
+      { name: '个人客户', color: '#31A12B', value: 0, display: 0 },
+      { name: '公司客户', color: '#C70612', value: 0, display: 0 },
     ],
     links: [
       {
         source: '企业项目',
         target: '新建项目',
-        value: 2 || config.NODE_MIN_VALUE,
-        display: '2个项目',
+        value: 0,
+        display: '0个项目',
       },
       {
         source: '资金方项目',
         target: '新建项目',
-        value: 3 || config.NODE_MIN_VALUE,
-        display: '3个项目',
+        value: 0,
+        display: '0个项目',
       },
       {
         source: '新建项目',
         target: '落地项目',
-        value: 0 || config.NODE_MIN_VALUE,
+        value: 0,
         display: '转化率 0%',
       },
-      { source: '落地项目', target: '个人客户', value: 0 || config.NODE_MIN_VALUE, display: '0' },
-      { source: '落地项目', target: '公司客户', value: 0 || config.NODE_MIN_VALUE, display: '0' },
+      { source: '落地项目', target: '个人客户', value: 0, display: '0' },
+      { source: '落地项目', target: '公司客户', value: 0, display: '0' },
     ],
   });
 
   const getDisplayVal = (type: 'node' | 'link', srcName: string, tgtName?: string) => {
     if (type === 'node') {
-      return rawData.nodes.find((n) => n.name === srcName)?.display;
+      return rawData.value.nodes.find((n) => n.name === srcName)?.display;
     } else {
-      return rawData.links.find((l) => l.source === srcName && l.target === tgtName)?.display;
+      return rawData.value.links.find((l) => l.source === srcName && l.target === tgtName)?.display;
     }
   };
 
@@ -158,7 +158,7 @@
 
     Object.entries(levelMap).forEach(([level, nodeNames]) => {
       const columnHeight = nodeNames.reduce((sum, name) => {
-        const n = rawData.nodes.find((x) => x.name === name);
+        const n = rawData.value.nodes.find((x) => x.name === name);
         const val = n ? n.value : 0;
         const h = Math.max(val * config.NODE_HEIGHT_RATIO, config.MIN_NODE_HEIGHT);
         return sum + h;
@@ -176,7 +176,7 @@
       let currentY = yOffset;
 
       nodeNames.forEach((nodeName) => {
-        const nodeGeoData = rawData.nodes.find((n) => n.name === nodeName);
+        const nodeGeoData = rawData.value.nodes.find((n) => n.name === nodeName);
         if (!nodeGeoData) return;
 
         const rawHeight = nodeGeoData.value * config.NODE_HEIGHT_RATIO;
@@ -201,17 +201,17 @@
 
   // --- 核心计算：连线路径 ---
   const sankeyLinks = computed<Link[]>(() => {
-    const incomingLinks: Record<string, typeof rawData.links> = {};
-    const outgoingLinks: Record<string, typeof rawData.links> = {};
+    const incomingLinks: Record<string, typeof rawData.value.links> = {};
+    const outgoingLinks: Record<string, typeof rawData.value.links> = {};
 
-    rawData.links.forEach((link) => {
+    rawData.value.links.forEach((link) => {
       if (!incomingLinks[link.target]) incomingLinks[link.target] = [];
       if (!outgoingLinks[link.source]) outgoingLinks[link.source] = [];
       incomingLinks[link.target].push(link);
       outgoingLinks[link.source].push(link);
     });
 
-    return rawData.links.map((link) => {
+    return rawData.value.links.map((link) => {
       const sourceNode = sankeyNodes.value.find((n) => n.name === link.source);
       const targetNode = sankeyNodes.value.find((n) => n.name === link.target);
 
@@ -282,7 +282,91 @@
     });
   });
 
-  // --- 交互控制 ---
+  const setData = () => {
+    const data = {
+      enterpriseProjects: 2,
+      fundingProjects: 3,
+      newProjects: 5,
+      landedProjects: 0,
+      individualClients: 0,
+      companyClients: 0,
+    };
+    const enterpriseProjects = data.enterpriseProjects || config.NODE_MIN_VALUE;
+    const enterpriseProjectsDisplay = data.enterpriseProjects;
+    const fundingProjects = data.fundingProjects || config.NODE_MIN_VALUE;
+    const fundingProjectsDisplay = data.fundingProjects;
+    const newProjects = data.newProjects || config.NODE_MIN_VALUE;
+    const newProjectsDisplay = data.newProjects;
+    const landedProjects = data.landedProjects || config.NODE_MIN_VALUE;
+    const landedProjectsDisplay = data.landedProjects;
+    const individualClients = data.individualClients || config.NODE_MIN_VALUE;
+    const individualClientsDisplay = data.individualClients;
+    const companyClients = data.companyClients || config.NODE_MIN_VALUE;
+    const companyClientsDisplay = data.companyClients;
+
+    rawData.value = {
+      nodes: [
+        {
+          name: '企业项目',
+          color: '#5680F5',
+          value: enterpriseProjects,
+          display: enterpriseProjectsDisplay,
+        },
+        {
+          name: '资金方项目',
+          color: '#F2BE05',
+          value: fundingProjects,
+          display: fundingProjectsDisplay,
+        },
+        {
+          name: '新建项目',
+          color: '#15C0E6',
+          value: newProjects,
+          display: newProjectsDisplay,
+        },
+        {
+          name: '落地项目',
+          color: '#007D99',
+          value: landedProjects,
+          display: landedProjectsDisplay,
+        },
+        {
+          name: '个人客户',
+          color: '#31A12B',
+          value: individualClients,
+          display: individualClientsDisplay,
+        },
+        {
+          name: '公司客户',
+          color: '#C70612',
+          value: companyClients,
+          display: companyClientsDisplay,
+        },
+      ],
+      links: [
+        {
+          source: '企业项目',
+          target: '新建项目',
+          value: enterpriseProjects,
+          display: '0个项目',
+        },
+        {
+          source: '资金方项目',
+          target: '新建项目',
+          value: fundingProjects,
+          display: '0个项目',
+        },
+        {
+          source: '新建项目',
+          target: '落地项目',
+          value: landedProjects,
+          display: '转化率 0%',
+        },
+        { source: '落地项目', target: '个人客户', value: individualClients, display: '0' },
+        { source: '落地项目', target: '公司客户', value: companyClients, display: '0' },
+      ],
+    };
+  };
 
   // 切换开关
   const toggleInteraction = () => {
@@ -320,7 +404,7 @@
   });
 
   onMounted(() => {
-    // Init
+    setData();
   });
 </script>
 
