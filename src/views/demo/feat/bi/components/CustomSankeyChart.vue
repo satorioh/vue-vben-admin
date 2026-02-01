@@ -1,6 +1,6 @@
 <template>
   <div class="sankey-container" :class="{ 'interactive-disabled': !config.INTERACTIVE }">
-    <svg ref="svgRef" width="100%" height="200px" @mouseleave="hideTooltip">
+    <svg ref="svgRef" width="100%" height="100%" @mouseleave="hideTooltip">
       <g v-for="(link, index) in sankeyLinks" :key="`link-${index}`">
         <path
           :d="link.path"
@@ -89,7 +89,7 @@
     NODE_HEIGHT_RATIO: 8,
     NODE_MIN_VALUE: 0.1,
     GAP: 60,
-    VERTICAL_PADDING: 40,
+    VERTICAL_PADDING: 60,
     // 【新增】交互总开关
     INTERACTIVE: false,
   });
@@ -331,6 +331,7 @@
     width: 100%;
     max-width: 900px;
     overflow: hidden;
+    flex: 1;
   }
 
   /* --- 关键 CSS 修改 --- */
