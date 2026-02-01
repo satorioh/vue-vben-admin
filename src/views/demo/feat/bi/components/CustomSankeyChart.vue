@@ -29,8 +29,8 @@
           :x="node.x + node.width / 2"
           :y="node.y - 24"
           text-anchor="middle"
-          font-size="16"
-          font-weight="bold"
+          font-size="12"
+          font-weight="400"
           :fill="node.color"
           style="pointer-events: none"
         >
@@ -40,8 +40,8 @@
           :x="node.x + node.width / 2"
           :y="node.y - 6"
           text-anchor="middle"
-          font-size="14"
-          fill="#999"
+          font-size="12"
+          :fill="node.color"
           style="pointer-events: none"
         >
           {{ node.value }}
@@ -116,12 +116,12 @@
   // --- 2. 展示数据 (Label Data) ---
   const labelData = reactive({
     nodes: [
-      { name: '企业项目', display: '2个' },
-      { name: '资金方项目', display: '3个' },
-      { name: '新建项目', display: '5个' },
-      { name: '落地项目', display: '0个' },
-      { name: '个人客户', display: '暂无' },
-      { name: '公司客户', display: '暂无' },
+      { name: '企业项目', display: '2' },
+      { name: '资金方项目', display: '3' },
+      { name: '新建项目', display: '5' },
+      { name: '落地项目', display: '0' },
+      { name: '个人客户', display: '0' },
+      { name: '公司客户', display: '0' },
     ],
     links: [
       { source: '企业项目', target: '新建项目', display: '2个项目' },
