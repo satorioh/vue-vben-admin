@@ -89,6 +89,9 @@
   const tooltipText = ref('');
   const tooltipX = ref(0);
   const tooltipY = ref(0);
+  // 【修改】同时记录水平和垂直方向的边界状态
+  const isNearRightEdge = ref(false);
+  const isNearBottomEdge = ref(false);
 
   // --- 配置项 ---
   const config = reactive({
@@ -438,8 +441,35 @@
   };
 
   const updateTooltipPos = (event: MouseEvent) => {
-    tooltipX.value = event.offsetX + 15;
-    tooltipY.value = event.offsetY + 15;
+    if (!svgRef.value) return;
+
+    const containerRect = svgRef.value.getBoundingClientRect();
+
+    // 计算鼠标相对于容器的坐标
+    const relativeX = event.clientX - containerRect.left;
+    const relativeY = event.clientY - containerRect.top;
+
+    // 1. 水平方向判断 (阈值设为 60% 左右)
+    if (relativeX > containerRect.width * 0.6) {
+      isNearRightEdge.value = true;
+      // 靠右：基准点设在鼠标左侧一点
+      tooltipX.value = relativeX - 10;
+    } else {
+      isNearRightEdge.value = false;
+      // 靠左：基准点设在鼠标右侧一点
+      tooltipX.value = relativeX + 10;
+    }
+
+    // 2. 垂直方向判断 (阈值设为 60% 左右)
+    if (relativeY > containerRect.height * 0.6) {
+      isNearBottomEdge.value = true;
+      // 靠下：基准点设在鼠标上方一点
+      tooltipY.value = relativeY - 10;
+    } else {
+      isNearBottomEdge.value = false;
+      // 靠上：基准点设在鼠标下方一点
+      tooltipY.value = relativeY + 10;
+    }
   };
 
   const hideTooltip = () => {
@@ -447,7 +477,18 @@
   };
 
   const tooltipStyle = computed(() => {
-    return { left: `${tooltipX.value}px`, top: `${tooltipY.value}px` };
+    // 定义 X 和 Y 轴的偏移
+    // 如果靠右，X轴平移 -100% (自身宽度)
+    const translateX = isNearRightEdge.value ? '-100%' : '0';
+    // 如果靠下，Y轴平移 -100% (自身高度)
+    const translateY = isNearBottomEdge.value ? '-100%' : '0';
+
+    return {
+      left: `${tooltipX.value}px`,
+      top: `${tooltipY.value}px`,
+      // 使用复合 transform 自动处理四个方向
+      transform: `translate(${translateX}, ${translateY})`,
+    };
   });
 
   onMounted(() => {
