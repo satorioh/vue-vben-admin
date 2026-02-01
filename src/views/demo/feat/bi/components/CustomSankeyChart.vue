@@ -98,48 +98,47 @@
   // --- 1. 几何数据 (Raw Data) ---
   const rawData = reactive({
     nodes: [
-      { name: '企业项目', color: '#5B8FF9', value: 2 },
-      { name: '资金方项目', color: '#F6BD16', value: 3 },
-      { name: '新建项目', color: '#00C7E6', value: 5 },
-      { name: '落地项目', color: '#006D75', value: 0.1 },
-      { name: '个人客户', color: '#52C41A', value: 0.1 },
-      { name: '公司客户', color: '#D9001B', value: 0.1 },
+      { name: '企业项目', color: '#5680F5', value: 2 || config.NODE_MIN_VALUE, display: 2 },
+      { name: '资金方项目', color: '#F2BE05', value: 3 || config.NODE_MIN_VALUE, display: 3 },
+      { name: '新建项目', color: '#15C0E6', value: 5 || config.NODE_MIN_VALUE, display: 5 },
+      {
+        name: '落地项目',
+        color: '#007D99',
+        value: 0 || config.NODE_MIN_VALUE,
+        display: 0,
+      },
+      { name: '个人客户', color: '#31A12B', value: 0 || config.NODE_MIN_VALUE, display: 0 },
+      { name: '公司客户', color: '#C70612', value: 0 || config.NODE_MIN_VALUE, display: 0 },
     ],
     links: [
-      { source: '企业项目', target: '新建项目', value: 2 },
-      { source: '资金方项目', target: '新建项目', value: 3 },
-      { source: '新建项目', target: '落地项目', value: 0.1 },
-      { source: '落地项目', target: '个人客户', value: 0.1 },
-      { source: '落地项目', target: '公司客户', value: 0.1 },
-    ],
-  });
-
-  // --- 2. 展示数据 (Label Data) ---
-  const labelData = reactive({
-    nodes: [
-      { name: '企业项目', display: '2' },
-      { name: '资金方项目', display: '3' },
-      { name: '新建项目', display: '5' },
-      { name: '落地项目', display: '0' },
-      { name: '个人客户', display: '0' },
-      { name: '公司客户', display: '0' },
-    ],
-    links: [
-      { source: '企业项目', target: '新建项目', display: '2个项目' },
-      { source: '资金方项目', target: '新建项目', display: '3个项目' },
-      { source: '新建项目', target: '落地项目', display: '转化率 0%' },
-      { source: '落地项目', target: '个人客户', display: '0' },
-      { source: '落地项目', target: '公司客户', display: '0' },
+      {
+        source: '企业项目',
+        target: '新建项目',
+        value: 2 || config.NODE_MIN_VALUE,
+        display: '2个项目',
+      },
+      {
+        source: '资金方项目',
+        target: '新建项目',
+        value: 3 || config.NODE_MIN_VALUE,
+        display: '3个项目',
+      },
+      {
+        source: '新建项目',
+        target: '落地项目',
+        value: 0 || config.NODE_MIN_VALUE,
+        display: '转化率 0%',
+      },
+      { source: '落地项目', target: '个人客户', value: 0 || config.NODE_MIN_VALUE, display: '0' },
+      { source: '落地项目', target: '公司客户', value: 0 || config.NODE_MIN_VALUE, display: '0' },
     ],
   });
 
   const getDisplayVal = (type: 'node' | 'link', srcName: string, tgtName?: string) => {
     if (type === 'node') {
-      return labelData.nodes.find((n) => n.name === srcName)?.display || '';
+      return rawData.nodes.find((n) => n.name === srcName)?.display;
     } else {
-      return (
-        labelData.links.find((l) => l.source === srcName && l.target === tgtName)?.display || ''
-      );
+      return rawData.links.find((l) => l.source === srcName && l.target === tgtName)?.display;
     }
   };
 
