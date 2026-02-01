@@ -88,8 +88,9 @@
     MIN_NODE_HEIGHT: 1,
     NODE_HEIGHT_RATIO: 8,
     NODE_MIN_VALUE: 0.1,
+    NODE_OFFSET_X: 40,
     GAP: 60,
-    VERTICAL_PADDING: 60,
+    NODE_OFFSET_Y: 60,
     // 【新增】交互总开关
     INTERACTIVE: false,
   });
@@ -170,9 +171,9 @@
     const nodes: Node[] = [];
 
     Object.entries(levelMap).forEach(([level, nodeNames]) => {
-      const x = sectionWidth * parseInt(level) + 50;
+      const x = sectionWidth * parseInt(level) + config.NODE_OFFSET_X;
       const currentLevelHeight = levelHeights[level];
-      const yOffset = (maxLevelHeight - currentLevelHeight) / 2 + config.VERTICAL_PADDING;
+      const yOffset = (maxLevelHeight - currentLevelHeight) / 2 + config.NODE_OFFSET_Y;
       let currentY = yOffset;
 
       nodeNames.forEach((nodeName) => {
