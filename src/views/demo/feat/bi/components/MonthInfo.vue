@@ -30,6 +30,62 @@
           <div class="tab-number supplier-number">
             <CountTo :end-val="supplierCount" :duration="1000" />
           </div>
+          <svg
+            v-if="currentTab === 'company'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="11"
+            height="11"
+            viewBox="0 0 11 11"
+            fill="none"
+            class="underline-svg outer-left"
+          >
+            <path
+              d="M0.497559 0.0499573C0.664934 1.71662 1.50181 5.44996 3.51032 7.04996C5.51884 8.64996 9.03373 9.71662 10.5401 10.05"
+              stroke="#D9D9D9"
+            />
+          </svg>
+          <svg
+            v-if="currentTab === 'project'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="10"
+            height="11"
+            viewBox="0 0 10 11"
+            fill="none"
+            class="underline-svg outer-right"
+          >
+            <path
+              d="M9.11963 0.0447998C8.96963 1.71147 8.21963 5.4448 6.41963 7.0448C4.61963 8.6448 1.46963 9.71147 0.119629 10.0448"
+              stroke="#D9D9D9"
+            />
+          </svg>
+          <svg
+            v-if="currentTab === 'supplier'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="11"
+            height="11"
+            viewBox="0 0 11 11"
+            fill="none"
+            class="underline-svg inner-left"
+          >
+            <path
+              d="M10.2432 0.050415C10.0742 1.71708 9.22957 5.45042 7.20239 7.05042C5.1752 8.65042 1.62763 9.71708 0.107242 10.0504"
+              stroke="#D9D9D9"
+            />
+          </svg>
+          <svg
+            v-if="currentTab === 'supplier'"
+            xmlns="http://www.w3.org/2000/svg"
+            width="10"
+            height="11"
+            viewBox="0 0 10 11"
+            fill="none"
+            class="underline-svg inner-right"
+          >
+            <path
+              d="M0.498047 0.0448151C0.648047 1.71148 1.39805 5.44482 3.19805 7.04482C4.99805 8.64482 8.14805 9.71148 9.49805 10.0448"
+              stroke="#D9D9D9"
+            />
+          </svg>
         </div>
 
         <div
@@ -268,7 +324,7 @@
       left: 20px;
       right: 20px;
       height: 1px;
-      background-color: #f0f0f0;
+      background-color: #d9d9d9;
       z-index: 0; /* 层级最低，在 Tab 之下 */
     }
   }
@@ -301,11 +357,30 @@
       line-height: 1;
     }
 
+    .underline-svg {
+      position: absolute;
+      bottom: 0;
+      background-color: #fff;
+      z-index: 10;
+      &.outer-left {
+        left: -2px;
+      }
+      &.outer-right {
+        right: -2px;
+      }
+      &.inner-left {
+        left: -11px;
+      }
+      &.inner-right {
+        right: -10px;
+      }
+    }
+
     /* --- 选中状态样式 --- */
     &.active {
       color: #000;
       background-color: #fff; /* 白色背景 */
-      border-color: #e4e7ed; /* 激活时的边框颜色（浅灰） */
+      border-color: #d9d9d9; /* 激活时的边框颜色（浅灰） */
       z-index: 1; /* 关键：层级提升，盖住父容器的底部灰线 */
 
       /* 可选：加一点非常淡的阴影增强立体感 */
@@ -329,6 +404,7 @@
 
       /* --- 供应商 Tab 选中特异化 (蓝色) --- */
       &.supplier-tab {
+        position: relative;
         .tab-number.supplier-number {
           color: #4799ff;
         }
