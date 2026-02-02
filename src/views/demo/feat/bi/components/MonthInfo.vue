@@ -33,7 +33,7 @@
         </div>
 
         <div
-          class="tab-item"
+          class="tab-item project-tab"
           :class="{ active: currentTab === 'project' }"
           @click="switchTab('project')"
         >
@@ -211,7 +211,7 @@
 </script>
 
 <style scoped lang="scss">
-  /* 容器样式 */
+  /* 容器样式保持不变 */
   .card-container {
     position: relative;
     width: 100%;
@@ -243,7 +243,7 @@
   }
 
   .header-title {
-    padding: 20px 20px 10px;
+    padding: 20px 20px 15px; /* 稍微调整下边距 */
     h2 {
       margin: 0;
       font-size: 18px;
@@ -252,12 +252,15 @@
     }
   }
 
-  /* Tab 样式 */
+  /* --- Tab 样式核心修改区域 --- */
   .tabs-container {
     display: flex;
     justify-content: space-around;
+    align-items: flex-end; /* 底部对齐 */
     position: relative;
+    padding: 0 20px; /* 让 Tab 不会紧贴最边缘 */
 
+    /* 底部贯通的灰线 */
     &::after {
       content: '';
       position: absolute;
@@ -266,7 +269,7 @@
       right: 20px;
       height: 1px;
       background-color: #f0f0f0;
-      z-index: 0;
+      z-index: 0; /* 层级最低，在 Tab 之下 */
     }
   }
 
@@ -274,69 +277,86 @@
     flex: 1;
     text-align: center;
     cursor: pointer;
-    padding: 10px 0;
+    padding: 12px 0;
     position: relative;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     color: #606266;
+
+    /* 预设透明边框和圆角，防止切换时布局跳动 */
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: 0; /* 紧贴底部 */
 
     .tab-label {
       font-size: 16px;
       margin-bottom: 5px;
+      font-weight: 500;
     }
 
     .tab-number {
       font-size: 32px;
       font-weight: bold;
       font-family: 'Arial', sans-serif;
+      line-height: 1;
     }
 
-    /* 选中状态 */
+    /* --- 选中状态样式 --- */
     &.active {
       color: #000;
+      background-color: #fff; /* 白色背景 */
+      border-color: #e4e7ed; /* 激活时的边框颜色（浅灰） */
+      z-index: 1; /* 关键：层级提升，盖住父容器的底部灰线 */
 
-      /* 默认紫色 (核心企业) */
+      /* 可选：加一点非常淡的阴影增强立体感 */
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.02);
+
+      /* --- 顶部彩色横条 (核心企业 - 紫色) --- */
+      &::before {
+        content: '';
+        position: absolute;
+        top: -1px; /* 覆盖在上边框之上 */
+        left: -1px; /* 撑满宽度 */
+        right: -1px;
+        height: 4px; /* 线条粗细 */
+        background: linear-gradient(90deg, #c084fc, #a855f7);
+        border-radius: 12px 12px 0 0; /* 跟随 Tab 的圆角 */
+      }
+
       .tab-number {
         color: #a855f7;
       }
 
-      /* 顶部横条默认颜色 (核心企业) */
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 20%;
-        right: 20%;
-        height: 4px;
-        background: linear-gradient(90deg, #c084fc, #a855f7);
-        border-radius: 0 0 4px 4px;
-      }
-
-      /* --- 新增：供应商 Tab 选中样式 --- */
+      /* --- 供应商 Tab 选中特异化 (蓝色) --- */
       &.supplier-tab {
         .tab-number.supplier-number {
-          color: #4799ff; /* 蓝色高亮 */
+          color: #4799ff;
         }
-        /* 供应商顶部横条改为蓝色渐变以匹配文字 */
         &::before {
           background: linear-gradient(90deg, #7bb7ff, #4799ff);
         }
       }
 
-      /* 项目 Tab 选中样式 */
-      .tab-number.project-number {
-        color: #7075ff; /* 原有的蓝色/紫色 */
+      &.project-tab {
+        .tab-number.supplier-number {
+          color: #7075ff;
+        }
+        &::before {
+          background: linear-gradient(90deg, #7bb7ff, #7075ff);
+        }
       }
     }
   }
 
   /* 内容区域 */
   .content-area {
-    padding: 10px 20px 10px;
+    padding: 15px 20px 10px; /* 顶部 padding 稍微加大，与 Tab 拉开一点呼吸感 */
     background-color: #fff;
     flex: 1;
     overflow: hidden;
   }
 
+  /* 以下保持原有代码不变 */
   .content-area :deep(.no-scrollbar) {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -361,7 +381,6 @@
     box-sizing: border-box;
   }
 
-  /* 通用列表项样式 */
   .li-item {
     border-radius: 10px;
     padding: 6px 10px;
@@ -373,17 +392,14 @@
     line-height: 24px;
   }
 
-  /* 核心企业背景 */
   .company-item {
     background: linear-gradient(90deg, #f4eaff 0%, #fff 100%);
   }
 
-  /* --- 新增：供应商背景 (浅蓝渐变) --- */
   .supplier-item {
     background: linear-gradient(90deg, #e6f1ff 0%, #fff 100%);
   }
 
-  /* 项目背景 */
   .project-item {
     display: flex;
     justify-content: space-between;
@@ -417,7 +433,6 @@
     }
   }
 
-  /* 动效 */
   .list-anim-enter-active {
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
