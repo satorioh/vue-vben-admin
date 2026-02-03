@@ -613,6 +613,14 @@ const comp: AppRouteModule = {
         title: '逆时针环形进度条',
       },
     },
+    {
+      path: 'aiButton',
+      name: 'AiButtonDemo',
+      component: () => import('@/views/demo/comp/ai-button/index.vue'),
+      meta: {
+        title: 'AI 按钮',
+      },
+    },
   ],
 };
 
