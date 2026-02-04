@@ -1,5 +1,6 @@
+src/views/demo/feat/bi/EmployeeBI.vue
 <template>
-  <Transition name="expand-from-tr">
+  <Transition :name="transitionName">
     <div v-if="visible" class="full-screen-overlay">
       <div class="body" :style="bodyStyle">
         <div class="scale-box" ref="scaleBoxRef">
@@ -60,7 +61,6 @@
   import MonthInfo from '@/views/demo/feat/bi/components/MonthInfo.vue';
   import FinanceChart from '@/views/demo/feat/bi/components/FinanceChart.vue';
   import EmployeePieChart from '@/views/demo/feat/bi/components/EmployeePieChart.vue';
-  import ProjectSankey from '@/views/demo/feat/bi/components/ProjectSankeyChart.vue';
   import CustomSankeyChart from '@/views/demo/feat/bi/components/CustomSankeyChart.vue';
   import FeedBack from '@/views/demo/feat/bi/components/FeedBack.vue';
 
@@ -78,9 +78,20 @@
       type: Boolean,
       default: true,
     },
+    /** 展开方向: 'top-right' | 'bottom-left' */
+    expandPosition: {
+      type: String, // PropType<'top-right' | 'bottom-left'>
+      default: 'top-right',
+      validator: (val: string) => ['top-right', 'bottom-left'].includes(val),
+    },
   });
 
   const emit = defineEmits(['update:modelValue', 'open', 'close']);
+
+  // 动态切换动画名称
+  const transitionName = computed(() => {
+    return props.expandPosition === 'bottom-left' ? 'expand-from-bl' : 'expand-from-tr';
+  });
 
   // 控制显示
   const visible = computed({
@@ -339,13 +350,12 @@
   }
 
   /* 动画 */
-  /* 修改：将 enter 和 leave 分开定义，enter 保持 0.5s */
+  /* Top-Right (默认右上角展开) */
   .expand-from-tr-enter-active {
     transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform-origin: top right;
   }
 
-  /* 修改：leave (收起) 设置为 2s */
   .expand-from-tr-leave-active {
     transition: all 2s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform-origin: top right;
@@ -359,6 +369,29 @@
 
   .expand-from-tr-enter-to,
   .expand-from-tr-leave-from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Bottom-Left (左下角展开) */
+  .expand-from-bl-enter-active {
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform-origin: bottom left;
+  }
+
+  .expand-from-bl-leave-active {
+    transition: all 2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform-origin: bottom left;
+  }
+
+  .expand-from-bl-enter-from,
+  .expand-from-bl-leave-to {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  .expand-from-bl-enter-to,
+  .expand-from-bl-leave-from {
     opacity: 1;
     transform: scale(1);
   }
