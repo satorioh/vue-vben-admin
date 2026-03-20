@@ -1,4 +1,3 @@
-src/views/demo/feat/bi/EmployeeBI.vue
 <template>
   <Transition :name="transitionName">
     <div v-if="visible" class="full-screen-overlay">
