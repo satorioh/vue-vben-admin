@@ -269,6 +269,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'custom-desc',
+      name: 'CustomDesc',
+      component: () => import('@/views/demo/feat/custom-desc/desc.vue'),
+      meta: {
+        title: '自定义Desc',
+      },
+    },
+    {
       path: '/error-log',
       name: 'ErrorLog',
       component: () => import('@/views/sys/error-log/index.vue'),
