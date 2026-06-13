@@ -1,28 +1,35 @@
 import { defHttp } from '@/utils/http/axios';
+import { ContentTypeEnum } from '@/enums/httpEnum';
 
 enum Api {
   MD_TO_PDF = '/py-api/md2pdf',
   MD_TO_WORD = '/py-api/md2word',
 }
 
-export const mdToPdfApi = (params: FormData) =>
+export const mdToPdfApi = (data: FormData) =>
   defHttp.post(
     {
       url: Api.MD_TO_PDF,
-      params,
+      data,
       responseType: 'blob',
+      headers: {
+        'Content-Type': ContentTypeEnum.FORM_DATA,
+      },
     },
     {
       isTransformResponse: false,
     },
   );
 
-export const mdToWordApi = (params: FormData) =>
+export const mdToWordApi = (data: FormData) =>
   defHttp.post(
     {
       url: Api.MD_TO_WORD,
-      params,
+      data,
       responseType: 'blob',
+      headers: {
+        'Content-Type': ContentTypeEnum.FORM_DATA,
+      },
     },
     {
       isTransformResponse: false,

@@ -108,7 +108,8 @@
       const data = new FormData();
       data.append('company_name', formData.company_name);
       if (fileList.value.length > 0) {
-        data.append('file', fileList.value[0]);
+        const file = fileList.value[0].originFileObj || fileList.value[0];
+        data.append('file', file);
       }
       if (formData.md_text) {
         data.append('md_text', formData.md_text);
