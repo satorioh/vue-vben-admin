@@ -237,6 +237,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'markdown-convert',
+      name: 'MarkdownConvertDemo',
+      component: () => import('@/views/demo/feat/markdown-convert/index.vue'),
+      meta: {
+        title: 'Markdown转换',
+      },
+    },
+    {
       path: 'workday-picker',
       name: 'WorkdayPickerDemo',
       component: () => import('@/views/demo/feat/workday-picker/index.vue'),
