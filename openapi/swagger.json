@@ -1,0 +1,212 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "AI Report System API",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/py-api/md2pdf": {
+            "post": {
+                "summary": "Md2Pdf",
+                "description": "Convert Markdown to PDF.",
+                "operationId": "md2pdf_py_api_md2pdf_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_md2pdf_py_api_md2pdf_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/py-api/md2word": {
+            "post": {
+                "summary": "Md2Word",
+                "description": "Convert Markdown to Word (DOCX).",
+                "operationId": "md2word_py_api_md2word_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_md2word_py_api_md2word_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Body_md2pdf_py_api_md2pdf_post": {
+                "properties": {
+                    "company_name": {
+                        "type": "string",
+                        "title": "Company Name"
+                    },
+                    "file": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "contentMediaType": "application/octet-stream"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "File"
+                    },
+                    "md_text": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Md Text"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "company_name"
+                ],
+                "title": "Body_md2pdf_py_api_md2pdf_post"
+            },
+            "Body_md2word_py_api_md2word_post": {
+                "properties": {
+                    "company_name": {
+                        "type": "string",
+                        "title": "Company Name"
+                    },
+                    "file": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "contentMediaType": "application/octet-stream"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "File"
+                    },
+                    "md_text": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Md Text"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "company_name"
+                ],
+                "title": "Body_md2word_py_api_md2word_post"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    },
+                    "input": {
+                        "title": "Input"
+                    },
+                    "ctx": {
+                        "type": "object",
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}
