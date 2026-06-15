@@ -12,6 +12,7 @@ export const mdToPdfApi = (data: FormData) =>
       url: Api.MD_TO_PDF,
       data,
       responseType: 'blob',
+      timeout: 60000, // 设置超时时间为 60 秒
       headers: {
         'Content-Type': ContentTypeEnum.FORM_DATA,
       },
