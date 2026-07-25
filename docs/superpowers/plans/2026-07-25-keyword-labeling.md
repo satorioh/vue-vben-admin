@@ -1,280 +1,165 @@
-# Keyword Labeling Implementation Plan
+# Keyword Labeling Simplification Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add exact keyword matching, yellow coordinate-based highlights, result counts, and circular previous/next navigation to the OCR keyword-labeling demo.
+**Goal:** Replace coordinate-based keyword overlay elements with a semi-transparent red background applied directly to matched OCR text elements.
 
-**Architecture:** Keep OCR upload, text boxes, selection, and copy behavior unchanged. A focused pure TypeScript module converts OCR locations into character-level coordinates and finds overlapping matches; `index.vue` owns toolbar state and declaratively renders match overlays using the existing preview scale.
+**Architecture:** Keep character-level keyword matching and circular navigation. Map every match back to its unique OCR location indexes, add a stable location index to each generated `.ocr-text` element, and toggle one CSS class on those existing elements.
 
-**Tech Stack:** Vue 3 Composition API, TypeScript, Element Plus, Vitest, Vite, SCSS
+**Tech Stack:** Vue 3 Composition API, TypeScript, Vitest, Element Plus, SCSS
 
 ## Global Constraints
 
 - Do not change the `/py-api/ocr/recognize_bbox` request flow.
-- Preserve OCR border display, drag selection, and copy behavior.
-- Match literal text exactly and allow overlapping results.
-- Approximate missing character coordinates by evenly dividing a multi-character OCR box.
-- Previous and next navigation wrap at the first and last result.
-- All matches use a yellow background and black text; the current match also has a distinct outline.
+- Preserve OCR border display, drag selection, copy behavior, result counts, and circular navigation.
+- Do not render separate keyword highlight elements.
+- Highlight an entire OCR element when any part of its text matches.
+- Use exactly `rgba(255, 0, 0, 0.5)` as the keyword background.
+- Do not add a special current-match outline or color.
 
 ---
 
 ## File Map
 
-- Create `src/views/demo/feat/keyword-labeling/keywordData.ts`: OCR character mapping, matching, and highlight-segment generation.
-- Create `src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts`: unit coverage for the pure matching module.
-- Modify `src/views/demo/feat/keyword-labeling/index.vue`: toolbar, state transitions, overlay rendering, and circular navigation.
-- Modify `package.json` and `pnpm-lock.yaml`: expose the existing Vitest-style tests through a root `test` script and install Vitest.
+- Modify `src/views/demo/feat/keyword-labeling/keywordData.ts`: expose unique OCR location indexes for a match and remove obsolete highlight-segment generation.
+- Modify `src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts`: cover location-index deduplication and remove segment-coordinate assertions.
+- Modify `src/views/demo/feat/keyword-labeling/index.vue`: remove overlay rendering and apply a class directly to `.ocr-text`.
 
-### Task 1: Character-Level OCR Matching
+### Task 1: Map Matches to OCR Elements
 
 **Files:**
-- Create: `src/views/demo/feat/keyword-labeling/keywordData.ts`
-- Create: `src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts`
-- Modify: `package.json`
-- Modify: `pnpm-lock.yaml`
+- Modify: `src/views/demo/feat/keyword-labeling/keywordData.ts`
+- Test: `src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts`
 
 **Interfaces:**
-- Produces: `buildKeywordData(locations: OcrLocationItem[]): KeywordData`
-- Produces: `findKeywordMatches(data: KeywordData, keyword: string): KeywordMatch[]`
-- Produces: `buildHighlightSegments(match: KeywordMatch): HighlightSegment[]`
-- `KeywordData` contains `text: string` and `characters: KeywordCharacter[]`.
-- `HighlightSegment` contains `locationIndex`, `text`, `x`, `y`, `width`, and `height`.
+- Consumes: `KeywordMatch.characters[].locationIndex`
+- Produces: `getMatchLocationIndexes(match: KeywordMatch): number[]`
 
-- [ ] **Step 1: Install and expose the test runner**
+- [ ] **Step 1: Write the failing location-index test**
 
-Run:
-
-```bash
-pnpm add -D vitest
-```
-
-Add to `package.json` scripts:
-
-```json
-"test": "vitest run"
-```
-
-- [ ] **Step 2: Write failing character-mapping tests**
-
-Create tests using these cases:
+Replace the obsolete highlight-segment test with:
 
 ```ts
-import { describe, expect, it } from 'vitest';
-import {
-  buildHighlightSegments,
-  buildKeywordData,
-  findKeywordMatches,
-} from '../keywordData';
+it('returns unique OCR location indexes for a partial multi-character match', () => {
+  const data = buildKeywordData(locations);
+  const [match] = findKeywordMatches(data, '付款承');
 
-const locations = [
-  { text: '付款', x: 10, y: 20, width: 40, height: 12 },
-  { text: '承', x: 50, y: 20, width: 20, height: 12 },
-  { text: '诺', x: 70, y: 20, width: 20, height: 12 },
-];
-
-describe('keywordData', () => {
-  it('maps every character to an evenly divided OCR coordinate', () => {
-    const data = buildKeywordData(locations);
-    expect(data.text).toBe('付款承诺');
-    expect(data.characters[1]).toMatchObject({
-      text: '款',
-      locationIndex: 0,
-      characterIndex: 1,
-      x: 30,
-      width: 20,
-    });
-  });
-
-  it('finds a keyword spanning OCR locations', () => {
-    const matches = findKeywordMatches(buildKeywordData(locations), '款承');
-    expect(matches).toHaveLength(1);
-    expect(matches[0].characters.map(({ text }) => text)).toEqual(['款', '承']);
-  });
-
-  it('finds overlapping matches', () => {
-    const data = buildKeywordData([{ text: '哈哈哈', x: 0, y: 0, width: 30, height: 10 }]);
-    expect(findKeywordMatches(data, '哈哈')).toHaveLength(2);
-  });
-
-  it('returns no matches for an empty keyword', () => {
-    expect(findKeywordMatches(buildKeywordData(locations), '')).toEqual([]);
-  });
-
-  it('merges adjacent matched characters from the same OCR location', () => {
-    const [match] = findKeywordMatches(buildKeywordData(locations), '付款');
-    expect(buildHighlightSegments(match)).toEqual([
-      { locationIndex: 0, text: '付款', x: 10, y: 20, width: 40, height: 12 },
-    ]);
-  });
+  expect(getMatchLocationIndexes(match)).toEqual([0, 1]);
 });
 ```
 
-- [ ] **Step 3: Run the tests and verify the expected failure**
+Import `getMatchLocationIndexes` from `../keywordData` and remove the `buildHighlightSegments` import.
 
-Run:
+- [ ] **Step 2: Run the focused test and verify RED**
 
 ```bash
-pnpm test src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts
+corepack pnpm test src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts
 ```
 
-Expected: FAIL because `../keywordData` does not exist.
+Expected: FAIL because `getMatchLocationIndexes` is not exported.
 
-- [ ] **Step 4: Implement the minimal pure module**
+- [ ] **Step 3: Implement the minimal mapping**
 
-Define exported interfaces `OcrLocationItem`, `KeywordCharacter`, `KeywordData`, `KeywordMatch`, and `HighlightSegment`. Implement `buildKeywordData` with `Array.from(location.text)` so one mapping is created per Unicode character. Assign each character `width / characterCount`, and calculate `x + characterWidth * characterIndex`.
+Add:
 
-Implement `findKeywordMatches` by comparing `Array.from(keyword)` against `data.characters` at every possible start index. On equality, return `{ start, end, characters }`; advancing the start by one preserves overlaps.
+```ts
+export function getMatchLocationIndexes(match: KeywordMatch): number[] {
+  return [...new Set(match.characters.map(({ locationIndex }) => locationIndex))];
+}
+```
 
-Implement `buildHighlightSegments` by merging only characters with the same `locationIndex` and consecutive `characterIndex` values. The merged width is the sum of character widths and its `text` is the joined matched characters.
+Delete the unused `HighlightSegment` interface and `buildHighlightSegments` function.
 
-- [ ] **Step 5: Run focused and existing tests**
-
-Run:
+- [ ] **Step 4: Run focused and complete tests**
 
 ```bash
-pnpm test src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts
-pnpm test
+corepack pnpm test src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts
+corepack pnpm test
 ```
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Commit the matching module**
-
-```bash
-git add package.json pnpm-lock.yaml src/views/demo/feat/keyword-labeling/keywordData.ts src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts
-git commit -m "feat(keyword-labeling): add keyword matching model"
-```
-
-### Task 2: Toolbar, Highlight Rendering, and Navigation
+### Task 2: Apply Highlight Class to OCR Text
 
 **Files:**
-- Modify: `src/views/demo/feat/keyword-labeling/index.vue:1-494`
+- Modify: `src/views/demo/feat/keyword-labeling/index.vue`
 
 **Interfaces:**
-- Consumes: `buildKeywordData`, `findKeywordMatches`, `buildHighlightSegments`, `KeywordMatch`, and `HighlightSegment` from `./keywordData`.
-- Produces: toolbar actions `labelKeyword`, `goToPreviousMatch`, `goToNextMatch`, and declarative `.keyword-highlight` overlays.
+- Consumes: `getMatchLocationIndexes(match)`
+- Produces: `.ocr-text.keyword-highlight` elements with no separate overlay DOM
 
-- [ ] **Step 1: Add toolbar and overlay markup**
+- [ ] **Step 1: Remove overlay rendering**
 
-Place the toolbar between the upload controls and `preview-container`:
+Delete the `v-for="highlight in keywordHighlights"` block from the template. Remove `CSSProperties`, `buildHighlightSegments`, the `keywordHighlights` computed value, and scoped `.keyword-highlight` overlay styles.
 
-```vue
-<div class="keyword-labeling-toolbar">
-  <el-input
-    v-model="keyword"
-    clearable
-    placeholder="请输入关键字"
-    @keyup.enter="labelKeyword"
-  />
-  <el-button type="primary" @click="labelKeyword">标注</el-button>
-  <span>共找到 {{ keywordMatches.length }} 处</span>
-  <el-button :disabled="!keywordMatches.length" @click="goToPreviousMatch">上一处</el-button>
-  <el-button :disabled="!keywordMatches.length" @click="goToNextMatch">下一处</el-button>
-</div>
-```
+- [ ] **Step 2: Give OCR elements stable indexes**
 
-Inside `preview-container`, render one absolute element per scaled highlight segment. Add `data-match-index`, a stable key, `keyword-highlight--current` for the active match, and the matched segment text so the overlay renders black characters over its yellow background.
-
-- [ ] **Step 2: Add keyword state and derived data**
-
-Import `computed` plus the pure-module interfaces and functions. Add:
+Change OCR generation to use `(ocr, locationIndex)` and set:
 
 ```ts
-const keyword = ref('');
-const keywordMatches = ref<KeywordMatch[]>([]);
-const currentMatchIndex = ref(-1);
-const keywordData = computed(() => buildKeywordData(ocrData.value.locations));
+div.setAttribute('data-location-index', String(locationIndex));
 ```
 
-Create a computed flattened overlay list. For each match, call `buildHighlightSegments`, attach its `matchIndex`, and calculate display coordinates from `previewWidth / originWidth` and `previewHeight / originHeight`. Preserve the existing OCR box `left` offset so overlay text and OCR text remain aligned.
+- [ ] **Step 3: Apply and clear match classes**
 
-- [ ] **Step 3: Implement labeling and circular navigation**
-
-Implement `clearKeywordMatches()` to empty results and reset the current index. Implement `labelKeyword()` to trim only for the empty-input check, search using the original entered text, set the first result current, and navigate to it on `nextTick`.
-
-Implement `navigateToMatch(index)` with:
+Add helpers that remove `.keyword-highlight` from all OCR elements and then add it to every unique location returned by `getMatchLocationIndexes`:
 
 ```ts
-currentMatchIndex.value =
-  (index + keywordMatches.value.length) % keywordMatches.value.length;
+const clearKeywordHighlightClasses = () => {
+  document.querySelectorAll('.ocr-text.keyword-highlight').forEach((element) => {
+    element.classList.remove('keyword-highlight');
+  });
+};
 ```
 
-After the DOM update, find the first element with the current `data-match-index` and call:
+Call the apply helper after matching and after `setOcrTextDiv()` recreates OCR elements. Call the clear helper before resetting `keywordMatches`.
+
+- [ ] **Step 4: Navigate using the matched OCR element**
+
+For `currentMatchIndex`, get its first location index and query:
 
 ```ts
-element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+`.ocr-text[data-location-index="${locationIndex}"]`
 ```
 
-Previous passes `currentMatchIndex - 1`; next passes `currentMatchIndex + 1`.
+Keep the existing circular index calculation and `scrollIntoView` options.
 
-- [ ] **Step 4: Reset stale results at lifecycle boundaries**
+- [ ] **Step 5: Add the direct highlight style**
 
-Call `clearKeywordMatches()` when a new file is selected, immediately before a new OCR request, and when `clearOcrTextDiv(true)` clears OCR data. Watch `keyword`; when it becomes empty, clear results. Do not modify upload payloads, response parsing, OCR box creation, or selection event handlers.
+Add the global rule:
 
-- [ ] **Step 5: Add toolbar and highlight styles**
+```css
+.ocr-text.keyword-highlight {
+  background-color: rgba(255, 0, 0, 0.5);
+}
+```
 
-Add a single-line flex toolbar with spacing and a bounded input width. Style overlays with absolute positioning, `pointer-events: none`, yellow background, black text, matching line height, and a z-index above the preview but compatible with OCR selection. Give the current match an orange outline and higher z-index.
+Do not add text, outlines, extra positioning, or z-index rules for keyword highlighting.
 
-- [ ] **Step 6: Run static validation**
-
-Run:
+- [ ] **Step 6: Run static and production validation**
 
 ```bash
-pnpm eslint src/views/demo/feat/keyword-labeling/index.vue src/views/demo/feat/keyword-labeling/keywordData.ts src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts
-pnpm type:check
+corepack pnpm eslint src/views/demo/feat/keyword-labeling/index.vue src/views/demo/feat/keyword-labeling/keywordData.ts src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts
+corepack pnpm test
+corepack pnpm exec vite build
 ```
 
-Expected: both commands exit 0.
+Expected: all commands exit 0.
 
-- [ ] **Step 7: Commit the page integration**
+- [ ] **Step 7: Verify in the browser**
+
+Upload and recognize an image, then verify:
+
+1. Searching a repeated Chinese keyword marks the existing `.ocr-text` elements red.
+2. No separate `.keyword-highlight` elements exist outside `.ocr-text`.
+3. A partial match inside a multi-character OCR item highlights the whole item.
+4. Previous and next navigation still wrap.
+5. Clearing the keyword or uploading another file removes the red background.
+6. Border display and drag selection remain usable.
+
+- [ ] **Step 8: Commit**
 
 ```bash
-git add src/views/demo/feat/keyword-labeling/index.vue
-git commit -m "feat(keyword-labeling): add keyword highlight navigation"
+git add src/views/demo/feat/keyword-labeling/index.vue src/views/demo/feat/keyword-labeling/keywordData.ts src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts docs/superpowers/plans/2026-07-25-keyword-labeling.md
+git commit -m "refactor(keyword-labeling): simplify highlight rendering"
 ```
-
-### Task 3: Regression and Production Verification
-
-**Files:**
-- Verify: `src/views/demo/feat/keyword-labeling/index.vue`
-- Verify: `src/views/demo/feat/keyword-labeling/keywordData.ts`
-- Verify: `src/views/demo/feat/keyword-labeling/__test__/keywordData.test.ts`
-
-**Interfaces:**
-- Consumes: the complete keyword-labeling page.
-- Produces: evidence that the feature and existing OCR interactions work together.
-
-- [ ] **Step 1: Run the complete automated checks**
-
-```bash
-pnpm test
-pnpm lint
-pnpm type:check
-pnpm build
-```
-
-Expected: every command exits 0 with no test failures, lint errors, type errors, or build errors.
-
-- [ ] **Step 2: Perform browser verification**
-
-Run `pnpm dev`, open `/feat/keywordLabeling`, and verify:
-
-1. Upload and recognize a file without changing the OCR request.
-2. Search a Chinese phrase spanning multiple OCR boxes; all occurrences become yellow with black text.
-3. Search part of `CNH-VA2025030700401`; only the approximate substring region is highlighted.
-4. Confirm the count matches visible occurrences.
-5. Navigate past both ends and confirm circular wrapping.
-6. Resize the viewport and confirm highlights remain aligned.
-7. Toggle borders, drag-select OCR text, and copy it successfully.
-8. Upload another file and confirm old highlights disappear.
-
-- [ ] **Step 3: Review the final diff**
-
-```bash
-git diff HEAD~2 --check
-git diff HEAD~2 --stat
-git status --short
-```
-
-Expected: no whitespace errors and no unrelated files.
