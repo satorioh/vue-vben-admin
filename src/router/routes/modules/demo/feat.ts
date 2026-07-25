@@ -237,6 +237,14 @@ const feat: AppRouteModule = {
       },
     },
     {
+      path: 'keywordLabeling',
+      name: 'keywordLabelingDemo',
+      component: () => import('@/views/demo/feat/keyword-labeling/index.vue'),
+      meta: {
+        title: '关键字标注',
+      },
+    },
+    {
       path: 'markdown-convert',
       name: 'MarkdownConvertDemo',
       component: () => import('@/views/demo/feat/markdown-convert/index.vue'),
