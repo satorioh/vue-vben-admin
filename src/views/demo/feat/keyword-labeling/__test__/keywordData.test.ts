@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildHighlightSegments,
   buildKeywordData,
   findKeywordMatches,
   getCircularMatchIndex,
+  getMatchLocationIndexes,
 } from '../keywordData';
 
 const locations = [
@@ -44,12 +44,10 @@ describe('keywordData', () => {
     expect(findKeywordMatches(buildKeywordData(locations), '')).toEqual([]);
   });
 
-  it('merges adjacent matched characters from the same OCR location', () => {
-    const [match] = findKeywordMatches(buildKeywordData(locations), '付款');
+  it('returns unique OCR location indexes for a partial multi-character match', () => {
+    const [match] = findKeywordMatches(buildKeywordData(locations), '付款承');
 
-    expect(buildHighlightSegments(match)).toEqual([
-      { locationIndex: 0, text: '付款', x: 10, y: 20, width: 40, height: 12 },
-    ]);
+    expect(getMatchLocationIndexes(match)).toEqual([0, 1]);
   });
 
   it('wraps match navigation at both ends', () => {

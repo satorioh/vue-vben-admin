@@ -27,15 +27,6 @@ export interface KeywordMatch {
   characters: KeywordCharacter[];
 }
 
-export interface HighlightSegment {
-  locationIndex: number;
-  text: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 export function buildKeywordData(locations: OcrLocationItem[]): KeywordData {
   const characters = locations.flatMap((location, locationIndex) => {
     const texts = Array.from(location.text);
@@ -86,34 +77,6 @@ export function getCircularMatchIndex(currentIndex: number, step: number, total:
   return (currentIndex + step + total) % total;
 }
 
-export function buildHighlightSegments(match: KeywordMatch): HighlightSegment[] {
-  const segments: HighlightSegment[] = [];
-
-  match.characters.forEach((character, index) => {
-    const previousCharacter = match.characters[index - 1];
-    const currentSegment = segments[segments.length - 1];
-    const canMerge =
-      currentSegment &&
-      previousCharacter &&
-      currentSegment.locationIndex === character.locationIndex &&
-      previousCharacter.locationIndex === character.locationIndex &&
-      previousCharacter.characterIndex + 1 === character.characterIndex;
-
-    if (canMerge) {
-      currentSegment.text += character.text;
-      currentSegment.width += character.width;
-      return;
-    }
-
-    segments.push({
-      locationIndex: character.locationIndex,
-      text: character.text,
-      x: character.x,
-      y: character.y,
-      width: character.width,
-      height: character.height,
-    });
-  });
-
-  return segments;
+export function getMatchLocationIndexes(match: KeywordMatch): number[] {
+  return [...new Set(match.characters.map(({ locationIndex }) => locationIndex))];
 }

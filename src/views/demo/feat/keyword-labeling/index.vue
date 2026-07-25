@@ -53,26 +53,11 @@
           fit="contain"
         />
       </div>
-      <div
-        v-for="highlight in keywordHighlights"
-        :key="highlight.key"
-        aria-hidden="true"
-        class="keyword-highlight"
-        :class="{
-          'keyword-highlight--current': highlight.matchIndex === currentMatchIndex,
-        }"
-        :data-match-index="highlight.matchIndex"
-        :style="highlight.style"
-      >
-        {{ highlight.text }}
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import type { CSSProperties } from 'vue';
-
   import { computed, ref, onBeforeUnmount, nextTick, watch } from 'vue';
   import { useResizeObserver } from '@vueuse/core';
   import { debounce } from 'lodash-es';
@@ -81,10 +66,10 @@
   import { message } from 'ant-design-vue';
 
   import {
-    buildHighlightSegments,
     buildKeywordData,
     findKeywordMatches,
     getCircularMatchIndex,
+    getMatchLocationIndexes,
   } from './keywordData';
   import type { KeywordMatch, OcrLocationItem } from './keywordData';
 
@@ -127,43 +112,28 @@
   const keywordMatches = ref<KeywordMatch[]>([]);
   const currentMatchIndex = ref(-1);
   const keywordData = computed(() => buildKeywordData(ocrData.value.locations));
+  const KEYWORD_HIGHLIGHT_CLASS = 'keyword-highlight';
 
-  const keywordHighlights = computed(() => {
-    if (
-      previewWidth.value === 0 ||
-      previewHeight.value === 0 ||
-      ocrData.value.originWidth === 0 ||
-      ocrData.value.originHeight === 0
-    ) {
-      return [];
-    }
+  const clearKeywordHighlightClasses = () => {
+    document.querySelectorAll(`.ocr-text.${KEYWORD_HIGHLIGHT_CLASS}`).forEach((element) => {
+      element.classList.remove(KEYWORD_HIGHLIGHT_CLASS);
+    });
+  };
 
-    const widthRatio = previewWidth.value / ocrData.value.originWidth;
-    const heightRatio = previewHeight.value / ocrData.value.originHeight;
-
-    return keywordMatches.value.flatMap((match, matchIndex) =>
-      buildHighlightSegments(match).map((segment, segmentIndex) => {
-        const height = heightRatio * segment.height;
-        const style: CSSProperties = {
-          top: `${heightRatio * segment.y}px`,
-          left: `${widthRatio * segment.x - 4}px`,
-          width: `${widthRatio * segment.width}px`,
-          height: `${height}px`,
-          fontSize: `${Math.max(height * 0.75, 10)}px`,
-          lineHeight: `${height}px`,
-        };
-
-        return {
-          key: `${matchIndex}-${segmentIndex}`,
-          matchIndex,
-          text: segment.text,
-          style,
-        };
-      }),
+  const applyKeywordHighlightClasses = () => {
+    clearKeywordHighlightClasses();
+    const locationIndexes = new Set(
+      keywordMatches.value.flatMap((match) => getMatchLocationIndexes(match)),
     );
-  });
+    locationIndexes.forEach((locationIndex) => {
+      document
+        .querySelector(`.ocr-text[data-location-index="${locationIndex}"]`)
+        ?.classList.add(KEYWORD_HIGHLIGHT_CLASS);
+    });
+  };
 
   const clearKeywordMatches = () => {
+    clearKeywordHighlightClasses();
     keywordMatches.value = [];
     currentMatchIndex.value = -1;
   };
@@ -171,8 +141,11 @@
   const scrollToCurrentMatch = async () => {
     if (currentMatchIndex.value < 0) return;
     await nextTick();
+    const match = keywordMatches.value[currentMatchIndex.value];
+    const locationIndex = match ? getMatchLocationIndexes(match)[0] : undefined;
+    if (locationIndex === undefined) return;
     const element = document.querySelector<HTMLElement>(
-      `.keyword-highlight[data-match-index="${currentMatchIndex.value}"]`,
+      `.ocr-text[data-location-index="${locationIndex}"]`,
     );
     element?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
   };
@@ -185,6 +158,7 @@
 
     keywordMatches.value = findKeywordMatches(keywordData.value, keyword.value);
     currentMatchIndex.value = keywordMatches.value.length ? 0 : -1;
+    applyKeywordHighlightClasses();
     scrollToCurrentMatch();
   };
 
@@ -306,7 +280,7 @@
     console.log('设置 OCR 文字位置');
     clearOcrTextDiv();
 
-    ocrData.value.locations.forEach((ocr) => {
+    ocrData.value.locations.forEach((ocr, locationIndex) => {
       // 过滤空字符
       if (!ocr.text) return;
       const div = document.createElement('div');
@@ -320,9 +294,11 @@
       div.style.width = (widthRatio * itemWidth >= 14 ? widthRatio * itemWidth : 14) + 'px';
       div.style.height = heightRatio * ocr.height + 'px';
       div.setAttribute('data-text', ocr.text);
+      div.setAttribute('data-location-index', String(locationIndex));
 
       document.getElementsByClassName('preview-container')[0].appendChild(div);
     });
+    applyKeywordHighlightClasses();
   };
 
   // 选中与框选逻辑新增
@@ -602,33 +578,19 @@
       .preview-area {
         flex: 1;
       }
-
-      .keyword-highlight {
-        position: absolute;
-        z-index: 2;
-        box-sizing: border-box;
-        overflow: hidden;
-        color: #000;
-        white-space: nowrap;
-        pointer-events: none;
-        background-color: #ffeb3b;
-
-        &--current {
-          z-index: 3;
-          outline: 2px solid #f57c00;
-          outline-offset: 1px;
-        }
-      }
     }
   }
 </style>
 <style>
   .ocr-text {
     position: absolute;
-    z-index: 4;
     user-select: none;
     cursor: text;
     transition: background-color 0.12s;
+  }
+
+  .ocr-text.keyword-highlight {
+    background-color: rgba(255, 0, 0, 0.5);
   }
 
   .ocr-text.selected {
