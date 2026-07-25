@@ -38,44 +38,20 @@
           fit="contain"
         />
       </div>
-      <transition name="sidebar-fade">
-        <div v-if="objectFile.url" class="ocr-sidebar">
-          <h3>AI识图</h3>
-          <div class="btn-group">
-            <a-button type="primary" @click="initScreenShot" class="mr-4">截图</a-button>
-            <a-button type="primary" danger @click="emptyScreenShot">清空</a-button>
-          </div>
-          <div class="ocr-result-list">
-            <div v-if="loading" class="ocr-loading-mask"> AI识别中... </div>
-            <template v-else>
-              <OcrResultItem
-                v-for="(item, index) in ocrResult"
-                :key="index"
-                class="ocr-result-item"
-                :model-value="item"
-                @update:model-value="updateOcrResult(index, $event)"
-              />
-            </template>
-          </div>
-        </div>
-      </transition>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+  import { ref, onBeforeUnmount, nextTick, watch } from 'vue';
   import { useResizeObserver } from '@vueuse/core';
   import { debounce } from 'lodash-es';
   import { UploadOutlined } from '@ant-design/icons-vue';
   import PdfViewer from '@/components/PdfViewer/index.vue';
   import { message } from 'ant-design-vue';
-  import OcrResultItem from '@/views/demo/feat/ocr/OcrResultItem.vue';
-  import { snapdom } from '@zumer/snapdom';
-  import ScreenShot from 'js-web-screen-shot';
 
   defineOptions({
-    name: 'WeiXinOcrDemo',
+    name: 'KeywordLabelingDemo',
   });
 
   interface OcrLocationItem {
@@ -97,7 +73,6 @@
 
   const apiUrl = `${apiPrefix}/ocr/recognize_bbox`;
   // const apiUrl = `${apiPrefix}/ocr/recognize_plain`;
-  const screenShotApiUrl = `${apiPrefix}/ocr/recognize`;
   const PDF_TYPE = 'application/pdf';
 
   const fileList = ref<File[]>([]);
@@ -130,12 +105,6 @@
     previewHeight.value = height;
     relayoutOnResize();
   });
-
-  const imageToBlobUrl = async (image) => {
-    const resp = await fetch(image);
-    const blob = await resp.blob();
-    return URL.createObjectURL(blob);
-  };
 
   // 将 blobUrl 转换为 File
   async function blobUrlToFile(blobUrl: string, filename = 'image.jpg'): Promise<File> {
@@ -239,10 +208,6 @@
       div.style.left = widthRatio * ocr.x - 4 + 'px';
       div.style.width = (widthRatio * itemWidth >= 14 ? widthRatio * itemWidth : 14) + 'px';
       div.style.height = heightRatio * ocr.height + 'px';
-      // div.style.fontSize =
-      //   calculateFontSize(ocr.text, ocr.width * widthRatio, ocr.height * heightRatio) + 'px';
-      // div.textContent = ocr.text;
-      // 使用data-属性存储文本
       div.setAttribute('data-text', ocr.text);
 
       document.getElementsByClassName('preview-container')[0].appendChild(div);
@@ -418,31 +383,6 @@
       .trim();
   };
 
-  /**
-   * 复制事件处理: 拦截系统 copy, 写入聚合文本
-   */
-  const handleCopyEvent = (e: ClipboardEvent) => {
-    console.log('handleCopyEvent');
-    const text = buildSelectedOcrText();
-    if (!text) return; // 没有选中则不拦截, 保持默认行为
-    e.preventDefault();
-    writeToClipboard(e, text);
-  };
-
-  const writeToClipboard = (e: ClipboardEvent, text: string) => {
-    try {
-      // 首选：在 copy 事件里写入剪贴板（无需安全上下文）
-      if (e.clipboardData) {
-        e.clipboardData.setData('text/plain', text);
-        message.success('复制成功');
-      } else {
-        throw new Error('clipboardData 不可用');
-      }
-    } catch (err) {
-      message.error('复制失败', err);
-    }
-  };
-
   const copyText = async (text) => {
     console.log('复制文本:', text);
     try {
@@ -477,7 +417,6 @@
     c.addEventListener('mouseup', handleContainerMouseUp);
     c.addEventListener('mouseleave', handleContainerMouseLeave);
     c.addEventListener('mouseover', handleContainerMouseOver);
-    // c.addEventListener('copy', handleCopyEvent);
     c.addEventListener('keydown', handleContainerKeydown);
   };
 
@@ -489,92 +428,8 @@
     c.removeEventListener('mouseup', handleContainerMouseUp);
     c.removeEventListener('mouseleave', handleContainerMouseLeave);
     c.removeEventListener('mouseover', handleContainerMouseOver);
-    // c.removeEventListener('copy', handleCopyEvent);
     c.removeEventListener('keydown', handleContainerKeydown);
   };
-
-  /******************************* 侧边栏功能 ***************************************/
-  const screenShotHandler = ref<ScreenShot | null>(null);
-  const ocrResult = ref<string[]>([]);
-
-  const blobToBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        resolve(reader.result); // 结果是 base64 字符串（带 data:... 前缀）
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob); // 转 base64
-    });
-  };
-
-  const base64ToFile = (base64, filename) => {
-    let arr = base64.split(',');
-    let mime = arr[0].match(/:(.*?);/)[1];
-    let bstr = atob(arr[1]);
-    let n = bstr.length;
-    let u8arr = new Uint8Array(n);
-
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-
-    return new File([u8arr], filename, { type: mime });
-  };
-
-  const getBodySnapshot = async () => {
-    const blob = await snapdom.toBlob(document.body);
-    // return URL.createObjectURL(blob);
-    return (await blobToBase64(blob)) as string;
-  };
-
-  const completeScreenShotCallback = (data: any) => {
-    console.log('Screenshot complete:', data);
-    const fileName = `screenshot-${Date.now()}.png`;
-    const file = base64ToFile(data.base64, fileName);
-    handleScreenshotUpload(file);
-  };
-
-  const initScreenShot = async () => {
-    const url = await getBodySnapshot();
-    screenShotHandler.value = new ScreenShot({
-      imgSrc: url,
-      enableWebRtc: false,
-      completeCallback: completeScreenShotCallback,
-    });
-  };
-
-  const handleScreenshotUpload = async (file) => {
-    showLoading(true);
-
-    let formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      let res = await fetch(screenShotApiUrl, {
-        method: 'POST',
-        body: formData,
-      });
-      let data = await res.json();
-      console.log('上传成功：', data);
-      const resultText = data.data.result.join('');
-      ocrResult.value.push(resultText);
-    } catch (err) {
-      console.error('上传失败：', err);
-    } finally {
-      showLoading(false);
-    }
-  };
-
-  const emptyScreenShot = () => {
-    ocrResult.value = [];
-  };
-
-  const updateOcrResult = (index, value) => {
-    ocrResult.value[index] = value;
-  };
-
-  onMounted(() => {});
 
   onBeforeUnmount(() => {
     relayoutOnResize.cancel();
@@ -616,58 +471,6 @@
 
       .preview-area {
         flex: 1;
-      }
-
-      .ocr-sidebar {
-        display: flex;
-        flex-direction: column;
-        width: 300px;
-        background: #fff;
-        border-left: 1px solid #eee;
-        border-radius: 12px 0 0 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        padding: 24px 16px;
-        box-sizing: border-box;
-        transition: box-shadow 0.3s;
-        overflow: hidden;
-        margin-left: 20px;
-
-        &:hover {
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-        }
-
-        h3 {
-          font-size: 16px;
-          font-weight: 500;
-          margin-bottom: 0;
-        }
-
-        .btn-group {
-          margin: 10px 0;
-        }
-      }
-      .ocr-result-list {
-        position: relative;
-        flex: 1;
-        overflow: hidden;
-        overflow-y: auto;
-        .ocr-loading-mask {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(255, 255, 255, 0.8);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 10;
-          font-size: 14px;
-          color: #333;
-        }
-        .ocr-result-item {
-          margin-bottom: 12px;
-        }
       }
     }
   }
