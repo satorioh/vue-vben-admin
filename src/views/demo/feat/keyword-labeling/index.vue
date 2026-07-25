@@ -1,38 +1,40 @@
 <template>
   <div class="keyword-labeling-demo-page">
-    <div class="flex mb-4 ocr-recognize-toolbar">
-      <el-upload
-        :file-list="fileList"
-        :showUploadList="false"
-        :maxCount="1"
-        accept="image/*,.pdf,.docx,.doc,.xlsx,.xls,.ppt,.pptx"
-        :before-upload="beforeUpload"
-        :show-file-list="false"
-      >
-        <el-button>
-          <upload-outlined />
-          选择文件
+    <div class="keyword-labeling-sticky-toolbar">
+      <div class="flex mb-4 ocr-recognize-toolbar">
+        <el-upload
+          :file-list="fileList"
+          :showUploadList="false"
+          :maxCount="1"
+          accept="image/*,.pdf,.docx,.doc,.xlsx,.xls,.ppt,.pptx"
+          :before-upload="beforeUpload"
+          :show-file-list="false"
+        >
+          <el-button>
+            <upload-outlined />
+            选择文件
+          </el-button>
+        </el-upload>
+        <el-button class="ml-4" :disabled="fileList.length === 0" @click="recognizeImage"
+          >识别</el-button
+        >
+        <el-switch class="ml-6" v-model="showBorder" inactive-text="边框" />
+      </div>
+      <div class="keyword-labeling-toolbar">
+        <el-input
+          v-model="keyword"
+          class="keyword-input"
+          clearable
+          placeholder="请输入关键字"
+          @keyup.enter="labelKeyword"
+        />
+        <el-button type="primary" @click="labelKeyword">标注</el-button>
+        <span>共找到 {{ keywordMatches.length }} 处</span>
+        <el-button :disabled="keywordMatches.length === 0" @click="goToPreviousMatch">
+          上一处
         </el-button>
-      </el-upload>
-      <el-button class="ml-4" :disabled="fileList.length === 0" @click="recognizeImage"
-        >识别</el-button
-      >
-      <el-switch class="ml-6" v-model="showBorder" inactive-text="边框" />
-    </div>
-    <div class="keyword-labeling-toolbar">
-      <el-input
-        v-model="keyword"
-        class="keyword-input"
-        clearable
-        placeholder="请输入关键字"
-        @keyup.enter="labelKeyword"
-      />
-      <el-button type="primary" @click="labelKeyword">标注</el-button>
-      <span>共找到 {{ keywordMatches.length }} 处</span>
-      <el-button :disabled="keywordMatches.length === 0" @click="goToPreviousMatch">
-        上一处
-      </el-button>
-      <el-button :disabled="keywordMatches.length === 0" @click="goToNextMatch">下一处</el-button>
+        <el-button :disabled="keywordMatches.length === 0" @click="goToNextMatch">下一处</el-button>
+      </div>
     </div>
     <div
       class="preview-container"
@@ -547,6 +549,13 @@
 <style scoped lang="scss">
   .keyword-labeling-demo-page {
     padding: 20px 0 20px 20px;
+
+    .keyword-labeling-sticky-toolbar {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      background-color: var(--app-content-background-color);
+    }
 
     .keyword-labeling-toolbar {
       display: flex;
