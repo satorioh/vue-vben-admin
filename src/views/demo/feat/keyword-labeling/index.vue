@@ -19,6 +19,21 @@
       >
       <el-switch class="ml-6" v-model="showBorder" inactive-text="边框" />
     </div>
+    <div class="keyword-labeling-toolbar">
+      <el-input
+        v-model="keyword"
+        class="keyword-input"
+        clearable
+        placeholder="请输入关键字"
+        @keyup.enter="labelKeyword"
+      />
+      <el-button type="primary" @click="labelKeyword">标注</el-button>
+      <span>共找到 {{ keywordMatches.length }} 处</span>
+      <el-button :disabled="keywordMatches.length === 0" @click="goToPreviousMatch">
+        上一处
+      </el-button>
+      <el-button :disabled="keywordMatches.length === 0" @click="goToNextMatch">下一处</el-button>
+    </div>
     <div
       class="preview-container"
       :class="{ boarder: showBorder }"
@@ -38,29 +53,44 @@
           fit="contain"
         />
       </div>
+      <div
+        v-for="highlight in keywordHighlights"
+        :key="highlight.key"
+        aria-hidden="true"
+        class="keyword-highlight"
+        :class="{
+          'keyword-highlight--current': highlight.matchIndex === currentMatchIndex,
+        }"
+        :data-match-index="highlight.matchIndex"
+        :style="highlight.style"
+      >
+        {{ highlight.text }}
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onBeforeUnmount, nextTick, watch } from 'vue';
+  import type { CSSProperties } from 'vue';
+
+  import { computed, ref, onBeforeUnmount, nextTick, watch } from 'vue';
   import { useResizeObserver } from '@vueuse/core';
   import { debounce } from 'lodash-es';
   import { UploadOutlined } from '@ant-design/icons-vue';
   import PdfViewer from '@/components/PdfViewer/index.vue';
   import { message } from 'ant-design-vue';
 
+  import {
+    buildHighlightSegments,
+    buildKeywordData,
+    findKeywordMatches,
+    getCircularMatchIndex,
+  } from './keywordData';
+  import type { KeywordMatch, OcrLocationItem } from './keywordData';
+
   defineOptions({
     name: 'KeywordLabelingDemo',
   });
-
-  interface OcrLocationItem {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    text: string;
-  }
 
   interface OcrData {
     originWidth: number;
@@ -92,6 +122,83 @@
     originHeight: 0,
     locations: [],
   });
+
+  const keyword = ref('');
+  const keywordMatches = ref<KeywordMatch[]>([]);
+  const currentMatchIndex = ref(-1);
+  const keywordData = computed(() => buildKeywordData(ocrData.value.locations));
+
+  const keywordHighlights = computed(() => {
+    if (
+      previewWidth.value === 0 ||
+      previewHeight.value === 0 ||
+      ocrData.value.originWidth === 0 ||
+      ocrData.value.originHeight === 0
+    ) {
+      return [];
+    }
+
+    const widthRatio = previewWidth.value / ocrData.value.originWidth;
+    const heightRatio = previewHeight.value / ocrData.value.originHeight;
+
+    return keywordMatches.value.flatMap((match, matchIndex) =>
+      buildHighlightSegments(match).map((segment, segmentIndex) => {
+        const height = heightRatio * segment.height;
+        const style: CSSProperties = {
+          top: `${heightRatio * segment.y}px`,
+          left: `${widthRatio * segment.x - 4}px`,
+          width: `${widthRatio * segment.width}px`,
+          height: `${height}px`,
+          fontSize: `${Math.max(height * 0.75, 10)}px`,
+          lineHeight: `${height}px`,
+        };
+
+        return {
+          key: `${matchIndex}-${segmentIndex}`,
+          matchIndex,
+          text: segment.text,
+          style,
+        };
+      }),
+    );
+  });
+
+  const clearKeywordMatches = () => {
+    keywordMatches.value = [];
+    currentMatchIndex.value = -1;
+  };
+
+  const scrollToCurrentMatch = async () => {
+    if (currentMatchIndex.value < 0) return;
+    await nextTick();
+    const element = document.querySelector<HTMLElement>(
+      `.keyword-highlight[data-match-index="${currentMatchIndex.value}"]`,
+    );
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  };
+
+  const labelKeyword = () => {
+    if (!keyword.value.trim() || keywordData.value.characters.length === 0) {
+      clearKeywordMatches();
+      return;
+    }
+
+    keywordMatches.value = findKeywordMatches(keywordData.value, keyword.value);
+    currentMatchIndex.value = keywordMatches.value.length ? 0 : -1;
+    scrollToCurrentMatch();
+  };
+
+  const navigateMatch = (step: number) => {
+    currentMatchIndex.value = getCircularMatchIndex(
+      currentMatchIndex.value,
+      step,
+      keywordMatches.value.length,
+    );
+    scrollToCurrentMatch();
+  };
+
+  const goToPreviousMatch = () => navigateMatch(-1);
+  const goToNextMatch = () => navigateMatch(1);
 
   const relayoutOnResize = debounce(() => {
     setOcrTextDiv();
@@ -138,6 +245,7 @@
   };
 
   const handleUpload = async (file) => {
+    clearKeywordMatches();
     showLoading(true);
     const filename = fileList.value[0]?.name || file.name || 'image.jpg';
     console.log(filename);
@@ -183,8 +291,11 @@
     while (existingDivs.length > 0) {
       existingDivs[0].parentNode?.removeChild(existingDivs[0]);
     }
-    if (clearData && ocrData.value.locations.length) {
-      ocrData.value.locations = [];
+    if (clearData) {
+      clearKeywordMatches();
+      if (ocrData.value.locations.length) {
+        ocrData.value.locations = [];
+      }
     }
   };
 
@@ -449,11 +560,30 @@
     },
     { deep: true },
   );
+
+  watch(keyword, (value) => {
+    if (!value.trim()) {
+      clearKeywordMatches();
+    }
+  });
 </script>
 
 <style scoped lang="scss">
   .keyword-labeling-demo-page {
     padding: 20px 0 20px 20px;
+
+    .keyword-labeling-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      white-space: nowrap;
+
+      .keyword-input {
+        flex: 0 0 280px;
+      }
+    }
+
     .preview-container {
       display: flex;
       width: 100%;
@@ -472,12 +602,30 @@
       .preview-area {
         flex: 1;
       }
+
+      .keyword-highlight {
+        position: absolute;
+        z-index: 2;
+        box-sizing: border-box;
+        overflow: hidden;
+        color: #000;
+        white-space: nowrap;
+        pointer-events: none;
+        background-color: #ffeb3b;
+
+        &--current {
+          z-index: 3;
+          outline: 2px solid #f57c00;
+          outline-offset: 1px;
+        }
+      }
     }
   }
 </style>
 <style>
   .ocr-text {
     position: absolute;
+    z-index: 4;
     user-select: none;
     cursor: text;
     transition: background-color 0.12s;

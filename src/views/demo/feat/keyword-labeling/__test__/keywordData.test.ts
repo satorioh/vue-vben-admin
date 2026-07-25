@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildHighlightSegments, buildKeywordData, findKeywordMatches } from '../keywordData';
+import {
+  buildHighlightSegments,
+  buildKeywordData,
+  findKeywordMatches,
+  getCircularMatchIndex,
+} from '../keywordData';
 
 const locations = [
   { text: '付款', x: 10, y: 20, width: 40, height: 12 },
@@ -45,5 +50,11 @@ describe('keywordData', () => {
     expect(buildHighlightSegments(match)).toEqual([
       { locationIndex: 0, text: '付款', x: 10, y: 20, width: 40, height: 12 },
     ]);
+  });
+
+  it('wraps match navigation at both ends', () => {
+    expect(getCircularMatchIndex(2, 1, 3)).toBe(0);
+    expect(getCircularMatchIndex(0, -1, 3)).toBe(2);
+    expect(getCircularMatchIndex(0, 1, 0)).toBe(-1);
   });
 });

@@ -81,6 +81,11 @@ export function findKeywordMatches(data: KeywordData, keyword: string): KeywordM
   return matches;
 }
 
+export function getCircularMatchIndex(currentIndex: number, step: number, total: number): number {
+  if (total === 0) return -1;
+  return (currentIndex + step + total) % total;
+}
+
 export function buildHighlightSegments(match: KeywordMatch): HighlightSegment[] {
   const segments: HighlightSegment[] = [];
 
