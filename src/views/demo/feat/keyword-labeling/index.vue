@@ -1,6 +1,6 @@
 <template>
   <div class="keyword-labeling-demo-page">
-    <div class="flex mb-4">
+    <div class="flex mb-4 ocr-recognize-toolbar">
       <el-upload
         :file-list="fileList"
         :showUploadList="false"
