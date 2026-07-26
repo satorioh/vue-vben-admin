@@ -554,6 +554,7 @@
       position: sticky;
       z-index: 10;
       top: 0;
+      padding: 12px 0;
       background-color: var(--app-content-background-color);
     }
 
@@ -561,7 +562,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 0;
       white-space: nowrap;
 
       .keyword-input {
