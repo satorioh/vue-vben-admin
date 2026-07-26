@@ -115,11 +115,16 @@
   const currentMatchIndex = ref(-1);
   const keywordData = computed(() => buildKeywordData(ocrData.value.locations));
   const KEYWORD_HIGHLIGHT_CLASS = 'keyword-highlight';
+  const CURRENT_KEYWORD_HIGHLIGHT_CLASS = 'keyword-highlight-current';
 
   const clearKeywordHighlightClasses = () => {
-    document.querySelectorAll(`.ocr-text.${KEYWORD_HIGHLIGHT_CLASS}`).forEach((element) => {
-      element.classList.remove(KEYWORD_HIGHLIGHT_CLASS);
-    });
+    document
+      .querySelectorAll(
+        `.ocr-text.${KEYWORD_HIGHLIGHT_CLASS}, .ocr-text.${CURRENT_KEYWORD_HIGHLIGHT_CLASS}`,
+      )
+      .forEach((element) => {
+        element.classList.remove(KEYWORD_HIGHLIGHT_CLASS, CURRENT_KEYWORD_HIGHLIGHT_CLASS);
+      });
   };
 
   const applyKeywordHighlightClasses = () => {
@@ -131,6 +136,14 @@
       document
         .querySelector(`.ocr-text[data-location-index="${locationIndex}"]`)
         ?.classList.add(KEYWORD_HIGHLIGHT_CLASS);
+    });
+
+    const currentMatch = keywordMatches.value[currentMatchIndex.value];
+    if (!currentMatch) return;
+    getMatchLocationIndexes(currentMatch).forEach((locationIndex) => {
+      document
+        .querySelector(`.ocr-text[data-location-index="${locationIndex}"]`)
+        ?.classList.add(CURRENT_KEYWORD_HIGHLIGHT_CLASS);
     });
   };
 
@@ -170,6 +183,7 @@
       step,
       keywordMatches.value.length,
     );
+    applyKeywordHighlightClasses();
     scrollToCurrentMatch();
   };
 
@@ -601,6 +615,10 @@
 
   .ocr-text.keyword-highlight {
     background-color: rgba(242, 233, 5, 0.5);
+  }
+
+  .ocr-text.keyword-highlight.keyword-highlight-current {
+    background-color: rgba(255, 0, 0, 0.5);
   }
 
   .ocr-text.selected {
