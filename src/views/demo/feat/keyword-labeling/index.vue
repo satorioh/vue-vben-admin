@@ -600,7 +600,7 @@
   }
 
   .ocr-text.keyword-highlight {
-    background-color: rgba(255, 0, 0, 0.5);
+    background-color: rgba(242, 233, 5, 0.5);
   }
 
   .ocr-text.selected {
